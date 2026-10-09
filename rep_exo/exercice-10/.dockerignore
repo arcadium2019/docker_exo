@@ -1,0 +1,5 @@
+target/
+init-db/
+.env
+*.md
+.git

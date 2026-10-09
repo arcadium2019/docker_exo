@@ -1,0 +1,53 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      # Method 1: values read from the .env file
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      # Named volume: database files survive "docker compose down"
+      - pg_data:/var/lib/postgresql/data
+      # Bind mount: SQL scripts executed on the first start (empty pg_data)
+      - ./init-db:/docker-entrypoint-initdb.d:ro,Z
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    # No "ports": PostgreSQL is only reachable by the app, through the Compose network
+
+  app:
+    build: .
+    image: notes-app
+    restart: unless-stopped
+    environment:
+      # Method 1: values read from the .env file
+      APP_NAME: ${APP_NAME}
+      APP_VERSION: ${APP_VERSION}
+      APP_ENV: ${APP_ENV}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      # Method 2: hard-coded values (internal to the Compose stack)
+      DB_HOST: db
+      DB_PORT: 5432
+      UPLOAD_PATH: /app/uploads
+      # Method 3: value from .env, or the default after ":-" if missing / empty
+      MAX_FILE_SIZE: ${MAX_FILE_SIZE:-5MB}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      SHOW_SQL: ${SHOW_SQL:-false}
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    volumes:
+      # Named volume: uploaded files survive container re-creation
+      - uploads:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pg_data:
+  uploads:

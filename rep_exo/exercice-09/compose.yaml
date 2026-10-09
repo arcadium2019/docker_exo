@@ -1,0 +1,52 @@
+name: ex09
+
+services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: dogsdb
+      MYSQL_USER: dogs_user
+      MYSQL_PASSWORD: dogs_pass
+    volumes:
+      - mysql-data:/var/lib/mysql
+    ports:
+      - "3309:3306"   # Only needed to run crud-api locally (outside Docker)
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-prootpass"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  logs-api:
+    build: ./logs-api
+    image: logs-api
+    restart: unless-stopped
+    volumes:
+      - logs-data:/data
+    ports:
+      - "8088:8081"
+
+  crud-api:
+    build: ./crud-api
+    image: crud-api
+    restart: unless-stopped
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: dogsdb
+      DB_USER: dogs_user
+      DB_PASSWORD: dogs_pass
+      LOGS_API_URL: http://logs-api:8081
+    ports:
+      - "8087:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      logs-api:
+        condition: service_started
+
+volumes:
+  mysql-data:
+  logs-data:
