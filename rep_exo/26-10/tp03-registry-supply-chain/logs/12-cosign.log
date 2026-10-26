@@ -1,0 +1,64 @@
+$ COSIGN_PASSWORD="" cosign generate-key-pair      # mot de passe vide pour le TP
+Private key written to cosign.key
+Public key written to cosign.pub
+-rw-------. cosign.key
+-rw-r--r--. cosign.pub
+
+$ crane digest localhost:5000/shopapi:1.4.2
+sha256:0e322832db317fd07e57b36aef41cf23d5f13cae1611bdc0f659ca434add9756
+
+$ cosign sign --yes --key cosign.key --tlog-upload=false localhost:5000/shopapi@sha256:0e322832db317fd07e57b36aef41cf23d5f13cae1611bdc0f659ca434add9756
+Pushing signature to: localhost:5000/shopapi
+
+$ cosign verify --key cosign.pub --insecure-ignore-tlog=true localhost:5000/shopapi:1.4.2 | jq
+WARNING: Skipping tlog verification is an insecure practice that lacks transparency and auditability verification for the signature.
+
+Verification for localhost:5000/shopapi:1.4.2 --
+The following checks were performed on each of these signatures:
+  - The cosign claims were validated
+  - The signatures were verified against the specified public key
+[
+  {
+    "critical": {
+      "identity": {
+        "docker-reference": "localhost:5000/shopapi"
+      },
+      "image": {
+        "docker-manifest-digest": "sha256:0e322832db317fd07e57b36aef41cf23d5f13cae1611bdc0f659ca434add9756"
+      },
+      "type": "cosign container image signature"
+    },
+    "optional": null
+  }
+]
+
+$ cosign attest --yes --key cosign.key --tlog-upload=false --type spdxjson --predicate sbom.json localhost:5000/shopapi@sha256:0e322832db317fd07e57b36aef41cf23d5f13cae1611bdc0f659ca434add9756
+Using payload from: sbom.json
+
+$ cosign verify-attestation --key cosign.pub --insecure-ignore-tlog=true --type spdxjson localhost:5000/shopapi:1.4.2 | jq -r .payload | base64 -d | jq "{predicateType, subject, packages: (.predicate.packages|length)}"
+{"predicateType":"https://spdx.dev/Document","subject":[{"name":"localhost:5000/shopapi","digest":{"sha256":"0e322832db317fd07e57b36aef41cf23d5f13cae1611bdc0f659ca434add9756"}}],"packages":340}
+
+# Ce que la signature a créé dans le registre
+$ curl …/v2/_catalog ; curl …/v2/shopapi/tags/list
+{"repositories":["demo-gc","shopapi"]}
+
+{"name":"shopapi","tags":["1.4.2","1.4.2-distroless","sha-d4a6b19","sha-068ba9e","1.4","1","sha256-0e322832db317fd07e57b36aef41cf23d5f13cae1611bdc0f659ca434add9756.sig","sha256-0e322832db317fd07e57b36aef41cf23d5f13cae1611bdc0f659ca434add9756.att"]}
+$ cosign tree localhost:5000/shopapi:1.4.2
+📦 Supply Chain Security Related artifacts for an image: localhost:5000/shopapi:1.4.2
+└── 💾 Attestations for an image tag: localhost:5000/shopapi:sha256-0e322832db317fd07e57b36aef41cf23d5f13cae1611bdc0f659ca434add9756.att
+   └── 🍒 sha256:9547712fbf3b953912e2fbd00e3afe9a9684cbf2fd14a61e272ede122a11e54b
+└── 🔐 Signatures for an image tag: localhost:5000/shopapi:sha256-0e322832db317fd07e57b36aef41cf23d5f13cae1611bdc0f659ca434add9756.sig
+   └── 🍒 sha256:730418385bf5baf905cd9cf0569bf06c15bba3eb4e309d9577116ebd394537d4
+
+$ crane manifest localhost:5000/shopapi:sha256-0e322832db317fd07e57b36aef41cf23d5f13cae1611bdc0f659ca434add9756.sig | jq '{mediaType, layers: [.layers[] | {mediaType, annotations}]}'
+{
+  "mediaType": "application/vnd.oci.image.manifest.v1+json",
+  "layers": [
+    {
+      "mediaType": "application/vnd.dev.cosign.simplesigning.v1+json",
+      "annotations": {
+        "dev.cosignproject.cosign/signature": "MEYCIQCmYSow4W+AEi2MJspFgGE9IRJwZk3YnZLl3xcxF+s1LwIhAMGa+da2SRUOTEuBZEhF0uNwB79JcNCA1yMkEZ9rznmH"
+      }
+    }
+  ]
+}

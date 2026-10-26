@@ -1,0 +1,19 @@
+$ docker buildx rm shop
+shop removed
+$ docker buildx create --name shop --driver docker-container --driver-opt network=host --buildkitd-config buildkitd.toml
+shop
+$ docker buildx inspect shop --bootstrap
+Name:          shop
+Driver:        docker-container
+Last Activity: 2026-10-26 10:41:35 +0000 UTC
+Nodes:
+Name:                  shop0
+Endpoint:              unix:///var/run/docker.sock
+Driver Options:        network="host"
+Status:                running
+BuildKit daemon flags: --allow-insecure-entitlement=network.host
+BuildKit version:      v0.33.1
+Platforms:             linux/amd64, linux/amd64/v2, linux/amd64/v3, linux/386
+Labels:
+ org.mobyproject.buildkit.worker.executor:         oci
+ org.mobyproject.buildkit.worker.hostname:         fedora

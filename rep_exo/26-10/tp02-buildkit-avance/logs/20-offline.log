@@ -1,0 +1,16 @@
+# 1) Build en ligne : remplit le cache mount uv-amd64
+$ docker buildx build --builder shop --progress=plain --platform linux/amd64 --secret id=index_url,env=INDEX_URL -f Dockerfile.uv -o type=cacheonly .
+  exit=0 2 passed in 0.06s|Installed 3 packages in 6ms|Installed 8 packages in 18ms
+# 2) Sans réseau, sans mode offline : passe AUSSI, car les pages d index en cache sont encore fraîches (PyPI : Cache-Control max-age=600). Passé ce délai, uv chercherait à les revalider : c est ce que UV_OFFLINE évite.
+$ docker buildx build --builder shop --progress=plain --platform linux/amd64 --secret id=index_url,env=INDEX_URL -f Dockerfile.uv -o type=cacheonly --network=none .
+  exit=0 2 passed in 0.06s|Installed 3 packages in 7ms|Installed 8 packages in 13ms
+# 3) Sans réseau + UV_OFFLINE=true : tout vient du cache mount
+$ docker buildx build --builder shop --progress=plain --platform linux/amd64 --secret id=index_url,env=INDEX_URL -f Dockerfile.uv -o type=cacheonly --network=none --build-arg UV_OFFLINE=true .
+  exit=0 2 passed in 0.07s|Installed 3 packages in 8ms|Installed 8 packages in 13ms
+# 4) Cache mount vidé : le build offline échoue (preuve que rien ne vient du réseau)
+$ docker buildx build --builder shop --progress=plain --platform linux/amd64 --secret id=index_url,env=INDEX_URL -f Dockerfile.uv -o type=cacheonly --network=none --build-arg UV_OFFLINE=true .
+  exit=1 0.202 error: No solution found when resolving dependencies|0.202 hint: Packages were unavailable because the network was disabled. When the network is disabled, registry packages may only be read from the cache.|error: No solution found when resolving dependencies|hint: Packages were unavailable because the network was disabled. When the network is disabled, registry packages may only be read from the cache.
+
+# Contrôle : --network=none coupe bien le réseau (test wget pypi.org dans un RUN, sortie seule)
+builder=shop    | CLI --network=none: NETWORK-KO | RUN --network=none: NETWORK-KO | sans option: NETWORK-OK
+builder=default | CLI --network=none: NETWORK-KO | RUN --network=none: NETWORK-KO | sans option: NETWORK-OK

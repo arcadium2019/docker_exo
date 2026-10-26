@@ -1,0 +1,7 @@
+$ docker buildx du --verbose | (type exec.cachemount)   # avant prune
+  cachemount 5.707MB Description:  cached mount /root/.npm from exec /bin/sh -c npm ci --ignore-scripts --no-audit --no-fund with id "//root/.npm"
+  cachemount 15.25MB Description:  cached mount /root/.cache/pip from exec /bin/sh -c pip install -r requirements.txt with id "/pip-amd64"
+$ docker builder prune -f
+Total:	51.48GB
+$ docker buildx du --verbose | (type exec.cachemount)   # après prune
+(fin)

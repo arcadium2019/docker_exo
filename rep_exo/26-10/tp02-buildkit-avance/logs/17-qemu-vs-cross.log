@@ -1,0 +1,5 @@
+# Builds à froid (builder shop vidé), sortie cacheonly. Machine amd64.
+  Dockerfile.emulated    linux/amd64  total  12.2s | pip install   3.3s | ruff+pytest  0.5s
+  Dockerfile.emulated    linux/arm64  total  67.9s | pip install  27.9s | ruff+pytest  6.2s
+  Dockerfile             linux/amd64  total  10.1s | pip install   2.8s | ruff+pytest  0.5s
+  Dockerfile             linux/arm64  total  11.0s | pip install   2.8s | ruff+pytest  0.5s

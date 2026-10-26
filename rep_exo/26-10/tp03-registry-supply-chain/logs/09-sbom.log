@@ -1,0 +1,9 @@
+$ source tools.sh && tools_login localhost:5000 ci "$CI_PASSWORD"
+
+$ syft registry:localhost:5000/shopapi:1.4.2 -o spdx-json > sbom.json ; jq ".packages | length" sbom.json
+340
+$ jq -r ".packages[].name" sbom.json | grep -E "^(express|pg|ioredis|pino|prom-client|eslint|nodemon|musl|busybox)$" | sort -u
+busybox express ioredis musl node pg pino prom-client 
+
+$ syft docker-archive:.scan/shopapi_legacy.tar -o spdx-json | jq '.packages | length'   # legacy, pour comparaison
+702

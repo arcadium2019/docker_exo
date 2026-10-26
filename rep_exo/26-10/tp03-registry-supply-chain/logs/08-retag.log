@@ -1,0 +1,32 @@
+# skopeo (installé sur l hôte). --*-cert-dir doit contenir UNIQUEMENT ca.crt (sinon ca.key est pris pour une clé client)
+$ skopeo copy --preserve-digests --src-cert-dir registry/trust --dest-cert-dir registry/trust docker://localhost:5000/shopapi:1.4.2 docker://localhost:5000/shopapi:1.4
+Getting image source signatures
+Copying blob sha256:36fea3e6f058575a6fd1112018ebb571316691eefa03057761912b6d6eabf3d4
+Copying blob sha256:4feea04c154301db6f4a496efa397b3db96603b1c009c797cfdde77bea8b3287
+Copying blob sha256:6a0ac1617861a677b045b7ff88545213ec31c0ff08763195a70a4a5adda577bb
+Copying blob sha256:b2cbbfe903b0821005780971ddc5892edcc4ce74c5a48d82e1d2b382edac3122
+Copying blob sha256:fff4e2c1b189bf87d63ad8bd07f7f4eb288d6f2b6a07a8bb44c60e8c075d2096
+Copying blob sha256:f7544d3802dd6a5bb2667bf3c01a41023cc15fb7b76dfe72554c52098a0266f4
+Copying blob sha256:5555aadf260faa19047408715e23215320f186bc6ed0165ae1450bd9c17b354c
+Copying blob sha256:4b3676940634191c3ed6d087a2ebbe47b4f858b8c05c9a81d700e869595ebef5
+Copying config sha256:058296396ccb7b21cb30f88e1e35e902e063862c66ce4c5640fb6bd554209335
+Writing manifest to image destination
+
+# crane (en conteneur). DOCKER_CONFIG dédié ne contenant QUE le compte ci (on ne monte pas ~/.docker/config.json et tous ses identifiants)
+$ alias crane="docker run --rm --network host -v ./registry/trust/ca.crt:/ca.crt:ro,Z -e SSL_CERT_FILE=/ca.crt -v ./.tools-docker:/docker:ro,Z -e DOCKER_CONFIG=/docker gcr.io/go-containerregistry/crane:v0.22.1"
+$ crane tag localhost:5000/shopapi:1.4.2 1
+2026/10/26 10:10:02 localhost:5000/shopapi:1: digest: sha256:0e322832db317fd07e57b36aef41cf23d5f13cae1611bdc0f659ca434add9756 size: 1991
+
+$ for t in 1.4.2 1.4 1; do crane digest localhost:5000/shopapi:$t; done
+1.4.2 -> sha256:0e322832db317fd07e57b36aef41cf23d5f13cae1611bdc0f659ca434add9756
+1.4 -> sha256:0e322832db317fd07e57b36aef41cf23d5f13cae1611bdc0f659ca434add9756
+1 -> sha256:0e322832db317fd07e57b36aef41cf23d5f13cae1611bdc0f659ca434add9756
+$ crane ls localhost:5000/shopapi
+1.4.2
+1.4.2-distroless
+sha-d4a6b19
+sha-068ba9e
+1.4
+1
+$ docker image ls localhost:5000/shopapi:1.4   # aucun pull local
+(aucune image locale)

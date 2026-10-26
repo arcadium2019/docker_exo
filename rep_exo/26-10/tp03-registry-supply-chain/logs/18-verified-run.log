@@ -1,0 +1,12 @@
+$ ./verified-run.sh --rm localhost:5000/shopapi:1.4.2 node -e "console.log(process.env.APP_VERSION)"     # release signée par la porte
+verified-run: signature OK for localhost:5000/shopapi@sha256:4f902901f59ee8f4e8fb7c21681f070e658cb3da6c311d25b9b80ef5610e4e82
+1.4.2
+exit=0
+
+$ ./verified-run.sh --rm localhost:5000/shopapi:sha-d4a6b19 id     # build de branche jamais signé
+verified-run: REFUSED localhost:5000/shopapi:sha-d4a6b19 (sha256:a4b89d0f4355966e6533467aca5210779e517fe8a1cee52fa883fb9a2c475279): no valid Shop SAS signature
+exit=126
+
+$ ./verified-run.sh --rm localhost:5000/shopapi:1.4.2-distroless   # refusée par la porte, donc non signée
+verified-run: REFUSED localhost:5000/shopapi:1.4.2-distroless (sha256:109b1b261eb0453e9043b932aa071ee5407a378bf5fd48f5c5ef9ce3880d15d8): no valid Shop SAS signature
+exit=126

@@ -1,0 +1,12 @@
+# Même test sur le builder "default" (driver docker, BuildKit intégré au daemon)
+Driver:        docker
+BuildKit version: v0.34.0
+$ docker build --progress=plain --secret id=pipconf,src=pip.conf -t worker:1.0 --no-cache .   #1
+    downloads=8 cached=0
+$ docker build --progress=plain --secret id=pipconf,src=pip.conf -t worker:1.0 --no-cache .   #2
+    downloads=8 cached=0
+
+# builder "shop" (driver docker-container)
+Driver:        docker-container
+BuildKit version:      v0.33.1
+  --no-cache #1 et #2 : downloads=8 cached=0 à chaque fois, nouvel ID de cache mount à chaque build (voir ci-dessus)

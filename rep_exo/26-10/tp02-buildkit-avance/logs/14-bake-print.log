@@ -1,0 +1,91 @@
+$ export BUILDX_BUILDER=shop
+$ docker buildx bake --print
+#1 [internal] load local bake definitions
+#1 reading docker-bake.hcl 2.48kB / 2.48kB done
+#1 DONE 0.0s
+{
+  "group": {
+    "default": {
+      "targets": [
+        "api",
+        "worker"
+      ]
+    }
+  },
+  "target": {
+    "api": {
+      "context": "../tp01-optimisation-image/shopapi",
+      "dockerfile": "Dockerfile",
+      "args": {
+        "APP_VERSION": "0.0.0-dev",
+        "GIT_SHA": "unknown"
+      },
+      "labels": {
+        "org.opencontainers.image.revision": "unknown",
+        "org.opencontainers.image.vendor": "Shop SAS",
+        "org.opencontainers.image.version": "0.0.0-dev"
+      },
+      "tags": [
+        "localhost:5000/shopapi:0.0.0-dev",
+        "localhost:5000/shopapi:sha-unknown"
+      ],
+      "cache-from": [
+        {
+          "ref": "localhost:5000/cache:shopapi",
+          "type": "registry"
+        }
+      ],
+      "cache-to": [
+        {
+          "mode": "max",
+          "ref": "localhost:5000/cache:shopapi",
+          "type": "registry"
+        }
+      ],
+      "platforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ]
+    },
+    "worker": {
+      "context": "shop-worker",
+      "dockerfile": "Dockerfile",
+      "args": {
+        "GIT_SHA": "unknown",
+        "VERSION": "0.0.0-dev"
+      },
+      "labels": {
+        "org.opencontainers.image.revision": "unknown",
+        "org.opencontainers.image.vendor": "Shop SAS",
+        "org.opencontainers.image.version": "0.0.0-dev"
+      },
+      "tags": [
+        "localhost:5000/shop-worker:0.0.0-dev",
+        "localhost:5000/shop-worker:sha-unknown"
+      ],
+      "cache-from": [
+        {
+          "ref": "localhost:5000/cache:shop-worker",
+          "type": "registry"
+        }
+      ],
+      "cache-to": [
+        {
+          "mode": "max",
+          "ref": "localhost:5000/cache:shop-worker",
+          "type": "registry"
+        }
+      ],
+      "secret": [
+        {
+          "id": "pipconf",
+          "src": "shop-worker/pip.conf"
+        }
+      ],
+      "platforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ]
+    }
+  }
+}

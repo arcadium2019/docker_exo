@@ -1,0 +1,16 @@
+# 1) Deux builds "naïfs"
+$ docker buildx build --builder shop --no-cache --provenance=false --build-arg APP_VERSION=1.4.2 --build-arg GIT_SHA=068ba9e -o type=oci,dest=naive-1.tar .
+digest naive-1: sha256:9d7368248c6508aae184d15bb75d580a381e499be3d6c0d453e89fc391074605
+$ docker buildx build --builder shop --no-cache --provenance=false --build-arg APP_VERSION=1.4.2 --build-arg GIT_SHA=068ba9e -o type=oci,dest=naive-2.tar .
+digest naive-2: sha256:54484b3868856f19c16a33659e5c4aac2fa5653618276f48a7d4b5a708e81a7f
+
+# 2) SOURCE_DATE_EPOCH + rewrite-timestamp
+SOURCE_DATE_EPOCH=1791551694 (date du dernier commit)
+$ SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH docker buildx build --builder shop --no-cache --provenance=false --build-arg APP_VERSION=1.4.2 --build-arg GIT_SHA=068ba9e -o type=oci,dest=repro-1.tar,rewrite-timestamp=true .
+digest repro-1: sha256:8487d66c7c4691c7f413f525397df0fe7723e9d329a38d0a7b11b102bffe8365
+$ SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH docker buildx build --builder shop --no-cache --provenance=false --build-arg APP_VERSION=1.4.2 --build-arg GIT_SHA=068ba9e -o type=oci,dest=repro-2.tar,rewrite-timestamp=true .
+digest repro-2: sha256:8487d66c7c4691c7f413f525397df0fe7723e9d329a38d0a7b11b102bffe8365
+{"created":"2026-10-26T09:59:59.787165444Z","hist":["2026-10-26T09:59:59.7322808Z","2026-10-26T09:59:59.787165444Z","2026-10-26T09:59:59.787165444Z","2026-10-26T09:59:59.787165444Z","2026-10-26T09:59:59.787165444Z","2026-10-26T09:59:59.787165444Z"]}
+sha256:b7584e935db7 sha256:c20dcb8ae983 sha256:d60f2c3fe1b8 
+{"created":"2026-10-26T10:00:08.273187262Z","hist":["2026-10-26T10:00:08.218836156Z","2026-10-26T10:00:08.273187262Z","2026-10-26T10:00:08.273187262Z","2026-10-26T10:00:08.273187262Z","2026-10-26T10:00:08.273187262Z","2026-10-26T10:00:08.273187262Z"]}
+sha256:8dc408d877ed sha256:4da749659f1d sha256:56a0d1db1ec4 

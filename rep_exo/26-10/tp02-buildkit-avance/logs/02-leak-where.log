@@ -1,0 +1,33 @@
+# 1) docker history
+$ docker history --no-trunc worker:leak | grep -i secret
+(rien : « S3cret » s'écrit avec un 3, grep -i secret ne le trouve pas)
+$ docker history --no-trunc worker:leak | grep -i -E 'Tr3sS3cret|password'
+RUN |1 PIP_INDEX_URL=http://svc-ci:Tr3sS3cret@localhost:8090/simple /bin/sh -c pip install -r requirements-dev.txt # buildkit
+ARG PIP_INDEX_URL=http://svc-ci:Tr3sS3cret@localhost:8090/simple
+
+# 2) docker inspect (config de l image : ce qui est poussé dans le registre)
+$ docker image inspect worker:leak | grep -n -i -E 'Tr3sS3cret|password'
+(rien : ni Env ni Labels, l'ARG n'est pas dans .Config)
+
+# 2b) le JSON de config brut (= blob config dans le registre)
+$ docker save worker:leak | tar -xO blobs/sha256/09837d9a6c275be67287f4fef38fde5c721c7e109a79f7290cdd3b8501b9d552 | jq '.history[] | select(.created_by|test("Tr3s"))'
+"ARG PIP_INDEX_URL=http://svc-ci:Tr3sS3cret@localhost:8090/simple"
+"RUN |1 PIP_INDEX_URL=http://svc-ci:Tr3sS3cret@localhost:8090/simple /bin/sh -c pip install -r requirements-dev.txt # buildkit"
+
+# 3) Les couches : fichiers contenant le secret
+$ for l in $(couches); do tar -xOf $l | grep -a -l Tr3sS3cret; done
+couche blobs/sha256/c28c0404d03e43785… (11 fichiers) : /app/pip.conf.example
+
+$ docker run --rm worker:leak cat /app/pip.conf.example
+# À placer dans ~/.config/pip/pip.conf sur le poste des devs
+[global]
+index-url = https://svc-ci:Tr3sS3cret@pypi.internal.example.com/simple
+
+# 4) L historique des builds BuildKit (même pour un build en ÉCHEC)
+$ docker buildx history ls | head -3 ; docker buildx history inspect <ref> | grep -i -A2 "build arg"
+BUILD ID                    NAME                                   STATUS      CREATED AT       DURATION   
+p64nva4djc7rxr1o2693exlvk   ..0/tp02-buildkit-avance/shop-worker   Completed   22 seconds ago   1.8s       
+i5yp1anav00qb60onkz56o1up   ..0/tp02-buildkit-avance/shop-worker   Error       32 seconds ago   10.0s      
+BUILD ARG	VALUE
+PIP_INDEX_URL	https://svc-ci:Tr3sS3cret@pypi.internal.example.com/simple
+   5 |     ARG PIP_INDEX_URL=https://user:password@pypi.internal.example.com/simple

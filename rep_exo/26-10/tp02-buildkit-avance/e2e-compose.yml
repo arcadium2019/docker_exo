@@ -1,0 +1,24 @@
+# End-to-end check: shopapi (TP01) pushes orders to Redis, shop-worker consumes them.
+name: shop-e2e
+services:
+  redis:
+    image: redis:7.4-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+  api:
+    image: shopapi:1.4.2
+    environment:
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "127.0.0.1:3003:3000"
+    depends_on:
+      redis:
+        condition: service_healthy
+  worker:
+    image: worker:1.0
+    environment:
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      redis:
+        condition: service_healthy

@@ -1,0 +1,79 @@
+# Shop SAS private registry: TLS + auth gateway, registry, Docker Hub mirror, web UI.
+name: shop-registry
+
+services:
+  registry:
+    image: registry:2.8.3
+    restart: unless-stopped
+    environment:
+      REGISTRY_HTTP_SECRET: ${REGISTRY_HTTP_SECRET:?generate it in .env}
+    volumes:
+      - ./config.yml:/etc/docker/registry/config.yml:ro,Z
+      - registry-data:/var/lib/registry
+    # Not published: only reachable through the gateway.
+    expose:
+      - "5000"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:5005/debug/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+  gateway:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    depends_on:
+      registry:
+        condition: service_healthy
+    ports:
+      - "5000:443"
+    volumes:
+      - ./nginx/registry.conf:/etc/nginx/conf.d/default.conf:ro,Z
+      - ./certs/registry.crt:/etc/nginx/certs/registry.crt:ro,Z
+      - ./certs/registry.key:/etc/nginx/certs/registry.key:ro,Z
+      - ./auth/htpasswd:/etc/nginx/auth/htpasswd:ro,Z
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--no-check-certificate", "-O", "/dev/null", "https://127.0.0.1/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  mirror:
+    image: registry:2.8.3
+    restart: unless-stopped
+    volumes:
+      - ./mirror-config.yml:/etc/docker/registry/config.yml:ro,Z
+      - mirror-data:/var/lib/registry
+    # HTTP on loopback only, as expected by "registry-mirrors": ["http://localhost:5001"].
+    ports:
+      - "127.0.0.1:5001:5000"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:5000/"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  ui:
+    image: joxit/docker-registry-ui:2.5.7
+    restart: unless-stopped
+    depends_on:
+      gateway:
+        condition: service_healthy
+    environment:
+      REGISTRY_TITLE: Shop SAS registry
+      SINGLE_REGISTRY: "true"
+      # The UI's own nginx proxies to the gateway, so the browser never needs CORS
+      # and basic auth is still enforced by the gateway.
+      NGINX_PROXY_PASS_URL: https://gateway
+      REGISTRY_SECURED: "true"
+      DELETE_IMAGES: "true"
+      SHOW_CONTENT_DIGEST: "true"
+      SHOW_CATALOG_NB_TAGS: "true"
+      TAGLIST_ORDER: num-desc;alpha-asc
+    ports:
+      - "127.0.0.1:8089:80"
+
+volumes:
+  registry-data:
+  mirror-data:

@@ -1,0 +1,21 @@
+
+== Metadata (shopapi:1.4.2-distroless)
+  PASS label org.opencontainers.image.version=1.4.2
+  PASS label org.opencontainers.image.revision=068ba9e
+  PASS label org.opencontainers.image.source=https://git.shop-sas.example/platform/shopapi
+  PASS non-root user (65532:65532)
+  PASS HEALTHCHECK ["CMD","/nodejs/bin/node","/healthcheck.js"]
+  PASS no secret in image Env
+
+== Scans (trivy, from a docker save archive)
+  FAIL 7 fixable HIGH/CRITICAL CVE(s):
+         CRITICAL libssl3@3.0.18-1~deb12u2 -> 3.0.19-1~deb12u2 (CVE-2026-31789)
+         HIGH libssl3@3.0.18-1~deb12u2 -> 3.0.19-1~deb12u2 (CVE-2026-28387)
+         HIGH libssl3@3.0.18-1~deb12u2 -> 3.0.19-1~deb12u2 (CVE-2026-28388)
+         HIGH libssl3@3.0.18-1~deb12u2 -> 3.0.19-1~deb12u2 (CVE-2026-28389)
+         HIGH libssl3@3.0.18-1~deb12u2 -> 3.0.19-1~deb12u2 (CVE-2026-28390)
+         HIGH libssl3@3.0.18-1~deb12u2 -> 3.0.20-1~deb12u2 (CVE-2026-45447)
+         HIGH libssl3@3.0.18-1~deb12u2 -> 3.0.22-1~deb12u2 (CVE-2026-84782)
+  PASS no secret in layers
+
+REJECTED shopapi:1.4.2-distroless: 1 policy violation(s). Reports in .release/shopapi_1.4.2-distroless/

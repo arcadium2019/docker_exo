@@ -1,0 +1,42 @@
+$ hadolint Dockerfile.distroless
+exit=0
+$ docker build -f Dockerfile.distroless --build-arg APP_VERSION=1.4.2 --build-arg GIT_SHA=068ba9e -t shopapi:1.4.2-distroless .
+sha256:61590d4779547da890518da5e348b9e2d55658dc7b4e20c98c620fdbbe9f4102
+$ docker image ls shopapi
+IMAGE                      ID             DISK USAGE   CONTENT SIZE   EXTRA
+shopapi:1.4.2              daea3db185be        144MB             0B        
+shopapi:1.4.2-distroless   61590d477954        130MB             0B        
+shopapi:legacy             b5bce0e99fcf        738MB             0B        
+shopapi:test               ad33d5dbb06f        157MB             0B        
+$ docker run -d --name api-dl -p 3001:3000 shopapi:1.4.2-distroless
+5deb824e3df07ef329eba74330dd35fda9485393697ae2a5d6e2c692fb4f11b6
+$ docker inspect api-dl --format '{{.State.Health.Status}}'
+healthy
+$ curl -s localhost:3001/
+{"service":"shopapi","version":"1.4.2"}
+$ docker exec api-dl sh
+OCI runtime exec failed: exec failed: unable to start container process: exec: "sh": executable file not found in $PATH
+exit=127
+$ docker exec api-dl id
+OCI runtime exec failed: exec failed: unable to start container process: exec: "id": executable file not found in $PATH
+exit=127
+$ docker debug / sidecar de debug : docker run --rm -it --pid container:api-dl --network container:api-dl busybox ps
+Unable to find image 'busybox:1.37' locally
+1.37: Pulling from library/busybox
+68fe9bff2ad4: Pulling fs layer
+68fe9bff2ad4: Verifying Checksum
+68fe9bff2ad4: Download complete
+68fe9bff2ad4: Pull complete
+Digest: sha256:bdf57e528e45e4433820e045b29b4597825a1c9e38353532d90a01445013f82e
+Status: Downloaded newer image for busybox:1.37
+PID   USER     TIME  COMMAND
+    1 65532     0:00 /nodejs/bin/node src/server.js
+   41 root      0:00 sh -c ps; wget -qO- 127.0.0.1:3000/health
+   47 root      0:00 ps
+{"status":"ok"}
+$ time docker stop api-dl
+api-dl
+
+real	0m0,160s
+user	0m0,007s
+sys	0m0,010s

@@ -1,0 +1,12 @@
+# a) Commande de l énoncé : le registre interne n existe pas
+$ docker build --build-arg PIP_INDEX_URL=https://svc-ci:Tr3sS3cret@pypi.internal.example.com/simple -t worker:leak . || true
+#8 0.918 Looking in indexes: https://svc-ci:****@pypi.internal.example.com/simple
+#8 1.131 WARNING: Retrying (Retry(total=4, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x7f2e1f9c7920>: Failed to establish a new connection: [Errno -5] No address associated with hostname')': /simple/redis/
+#8 1.740 WARNING: Retrying (Retry(total=3, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x7f2e1dad76b0>: Failed to establish a new connection: [Errno -5] No address associated with hostname')': /simple/redis/
+#8 2.788 WARNING: Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x7f2e1dad7890>: Failed to establish a new connection: [Errno -5] No address associated with hostname')': /simple/redis/
+
+# b) Même Dockerfile, avec le faux PyPI interne authentifié (localhost:8090) : le build réussit
+$ docker build --network host --build-arg PIP_INDEX_URL=http://svc-ci:Tr3sS3cret@localhost:8090/simple -t worker:leak .
+#8 0.816 Looking in indexes: http://svc-ci:****@localhost:8090/simple
+#8 1.389 Successfully installed iniconfig-2.3.1 packaging-26.3 pluggy-1.7.0 prometheus-client-0.20.0 psycopg2-binary-2.9.9 pytest-8.3.2 redis-5.0.8 ruff-0.6.3
+#9 naming to docker.io/library/worker:leak done

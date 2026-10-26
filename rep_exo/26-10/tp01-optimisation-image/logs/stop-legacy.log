@@ -1,0 +1,19 @@
+$ time docker stop api-legacy
+api-legacy
+
+real	0m10,178s
+user	0m0,013s
+sys	0m0,007s
+$ docker logs api-legacy | tail -3
+> node src/server.js
+
+{"level":30,"time":1793008495223,"pid":19,"hostname":"92014fa4f22c","port":3000,"msg":"shopapi démarré"}
+$ docker inspect api-legacy --format "{{.State.ExitCode}}"
+137
+$ docker run --rm shopapi:legacy ps -o pid,cmd ... (PID 1)
+    PID    PPID CMD
+      1       0 /bin/sh -c npm start
+      7       1 npm start
+     18       7 sh -c node src/server.js
+     19      18 node src/server.js
+     30       0 ps -eo pid,ppid,cmd

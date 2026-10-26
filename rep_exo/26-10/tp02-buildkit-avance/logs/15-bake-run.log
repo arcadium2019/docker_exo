@@ -1,0 +1,30 @@
+$ VERSION=1.0 GIT_SHA=$(git rev-parse --short HEAD) docker buildx bake worker-test
+#12 DONE 0.0s
+#16 DONE 0.0s
+#17 DONE 0.0s
+#18 0.079 All checks passed!
+#18 0.452 2 passed in 0.06s
+#18 DONE 0.5s
+exit=0
+
+# Un test cassé fait échouer la cible (worker/main.py modifié temporairement : seuil 100 -> 1000)
+$ docker buildx bake worker-test
+#10 ERROR: failed to configure registry cache importer: localhost:5000/cache:shop-worker: not found
+#16 0.422 >       assert process({"id": 1, "productId": 1, "quantity": 500}, None) == "rejected"
+#16 0.422 E       AssertionError: assert 'confirmed' == 'rejected'
+#16 0.422 FAILED tests/test_process.py::test_rejects_large_orders - AssertionError: ass...
+exit=1
+(main.py restauré)
+
+$ VERSION=1.0 docker buildx bake --set '*.platform=linux/$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')' --load
+#12 ERROR: failed to configure registry cache importer: localhost:5000/cache:shop-worker: not found
+#28 importing to docker
+#31 ERROR: failed to configure registry cache importer: localhost:5000/cache:shopapi: not found
+#47 importing to docker
+real 12.1s
+$ docker image ls --filter reference="localhost:5000/*:1.0"
+IMAGE                            ID             DISK USAGE   CONTENT SIZE   EXTRA
+localhost:5000/shop-worker:1.0   8e8899b915f2        130MB             0B        
+localhost:5000/shopapi:1.0       58bbb2fac648        152MB             0B        
+$ docker image inspect localhost:5000/shop-worker:1.0 --format '{{json .Config.Labels}}' | jq -c
+{"org.opencontainers.image.description":"Shop SAS order queue consumer","org.opencontainers.image.revision":"068ba9e","org.opencontainers.image.source":"https://git.shop-sas.example/platform/shop-worker","org.opencontainers.image.title":"shop-worker","org.opencontainers.image.vendor":"Shop SAS","org.opencontainers.image.version":"1.0"}

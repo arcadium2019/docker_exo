@@ -1,0 +1,21 @@
+# Mesures sur le builder "shop" (docker-container), Dockerfile final, plateforme native (amd64)
+# A) À froid : builder vidé (couches + cache mount)
+$ time docker buildx build --builder shop --progress=plain --secret id=pipconf,src=pip.conf -t worker:1.0 .
+    total 7.1s | wheels téléchargées 8 | servies par le cache mount 6
+# B) Rebuild sans changement
+$ time docker buildx build --builder shop --progress=plain --secret id=pipconf,src=pip.conf -t worker:1.0 .
+    total 0.9s | wheels téléchargées 0 | servies par le cache mount 0
+# C) Énoncé : cache de COUCHES vidé (cache mount conservé) + nouvelle dépendance
+$ docker buildx prune --builder shop -f --filter type=regular
+Total:	66.42MB
+$ echo "requests==2.32.3" >> requirements.txt
+$ time docker buildx build --builder shop --progress=plain --secret id=pipconf,src=pip.conf -t worker:1.0 .
+    total 5.4s | wheels téléchargées 5 | servies par le cache mount 32
+# D) Même scénario, cache mount vidé aussi (= ce que fait réellement "docker builder prune -f")
+$ docker buildx prune --builder shop -af
+Total:	129.4MB
+$ time docker buildx build --builder shop --progress=plain --secret id=pipconf,src=pip.conf -t worker:1.0 .
+    total 10.2s | wheels téléchargées 13 | servies par le cache mount 16
+# E) --no-cache, cache mount plein
+$ time docker buildx build --builder shop --progress=plain --secret id=pipconf,src=pip.conf -t worker:1.0 --no-cache .
+    total 6.1s | wheels téléchargées 13 | servies par le cache mount 16

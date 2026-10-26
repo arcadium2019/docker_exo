@@ -1,0 +1,26 @@
+# Docker Hub pull-through cache.
+version: 0.1
+log:
+  level: info
+  formatter: text
+  fields:
+    service: mirror
+storage:
+  filesystem:
+    rootdirectory: /var/lib/registry
+  # Needed by the proxy scheduler to expire cached content (ttl).
+  delete:
+    enabled: true
+http:
+  addr: :5000
+proxy:
+  remoteurl: https://registry-1.docker.io
+  # Optional Docker Hub account to raise the pull rate limit:
+  # username: ...
+  # password: ...
+  ttl: 168h
+health:
+  storagedriver:
+    enabled: true
+    interval: 10s
+    threshold: 3

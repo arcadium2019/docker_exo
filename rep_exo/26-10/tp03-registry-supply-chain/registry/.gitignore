@@ -1,0 +1,5 @@
+# Private material: never commit keys, passwords, local secrets.
+certs/*.key
+certs/*.srl
+auth/htpasswd
+.env

@@ -1,0 +1,119 @@
+$ docker build --target test -t shopapi:test .
+#14 exporting layers 0.3s done
+#14 writing image sha256:ad33d5dbb06f844b19226db4bf9d4c7fdad3632750127a89b626f6f6d1f7d508 done
+#14 naming to docker.io/library/shopapi:test done
+#14 DONE 0.3s
+
+$ docker image ls shopapi
+IMAGE            ID             DISK USAGE   CONTENT SIZE   EXTRA
+shopapi:1.4.2    0cb90c4e68cd        144MB             0B        
+shopapi:legacy   b5bce0e99fcf        738MB             0B        
+shopapi:test     ad33d5dbb06f        157MB             0B        
+
+$ docker image inspect shopapi:1.4.2 --format "{{.Size}}"
+144240514
+$ docker image inspect shopapi:legacy --format "{{.Size}}"
+738257941
+
+$ docker history shopapi:1.4.2
+IMAGE          CREATED          CREATED BY                                      SIZE      COMMENT
+0cb90c4e68cd   16 seconds ago   CMD ["node" "src/server.js"]                    0B        buildkit.dockerfile.v0
+<missing>      16 seconds ago   HEALTHCHECK &{["CMD" "wget" "-q" "-O" "/dev/…   0B        buildkit.dockerfile.v0
+<missing>      16 seconds ago   EXPOSE map[3000/tcp:{}]                         0B        buildkit.dockerfile.v0
+<missing>      16 seconds ago   USER 1000:1000                                  0B        buildkit.dockerfile.v0
+<missing>      16 seconds ago   COPY src ./src # buildkit                       4.13kB    buildkit.dockerfile.v0
+<missing>      16 seconds ago   COPY package.json ./ # buildkit                 545B      buildkit.dockerfile.v0
+<missing>      16 seconds ago   COPY /app/node_modules ./node_modules # buil…   8.56MB    buildkit.dockerfile.v0
+<missing>      22 seconds ago   WORKDIR /app                                    0B        buildkit.dockerfile.v0
+<missing>      22 seconds ago   ENV NODE_ENV=production APP_VERSION=1.4.2 PO…   0B        buildkit.dockerfile.v0
+<missing>      22 seconds ago   LABEL org.opencontainers.image.title=shopapi…   0B        buildkit.dockerfile.v0
+<missing>      22 seconds ago   ARG SOURCE_URL=https://git.shop-sas.example/…   0B        buildkit.dockerfile.v0
+<missing>      22 seconds ago   ARG GIT_SHA=unknown                             0B        buildkit.dockerfile.v0
+<missing>      22 seconds ago   ARG APP_VERSION=0.0.0-dev                       0B        buildkit.dockerfile.v0
+<missing>      6 months ago     CMD ["node"]                                    0B        buildkit.dockerfile.v0
+<missing>      6 months ago     ENTRYPOINT ["docker-entrypoint.sh"]             0B        buildkit.dockerfile.v0
+<missing>      6 months ago     COPY docker-entrypoint.sh /usr/local/bin/ # …   388B      buildkit.dockerfile.v0
+<missing>      6 months ago     RUN /bin/sh -c apk add --no-cache --virtual …   5.36MB    buildkit.dockerfile.v0
+<missing>      6 months ago     ENV YARN_VERSION=1.22.22                        0B        buildkit.dockerfile.v0
+<missing>      6 months ago     RUN /bin/sh -c addgroup -g 1000 node     && …   122MB     buildkit.dockerfile.v0
+<missing>      6 months ago     ENV NODE_VERSION=20.20.2                        0B        buildkit.dockerfile.v0
+<missing>      6 months ago     CMD ["/bin/sh"]                                 0B        buildkit.dockerfile.v0
+<missing>      6 months ago     ADD alpine-minirootfs-3.23.4-x86_64.tar.gz /…   8.45MB    buildkit.dockerfile.v0
+
+$ docker inspect shopapi:1.4.2 --format "{{len .RootFS.Layers}}"
+8
+
+$ docker run --rm shopapi:1.4.2 id
+uid=1000(node) gid=1000(node) groups=1000(node)
+
+$ docker run --rm shopapi:1.4.2 ls -la /app
+total 4
+drwxr-xr-x    1 root     root             6 Oct 26 09:56 .
+drwxr-xr-x    1 root     root             0 Oct 26 09:56 ..
+drwxr-xr-x    1 root     root          2434 Oct 26 09:56 node_modules
+-rw-r--r--    1 root     root           545 Oct 26 09:50 package.json
+drwxr-xr-x    1 root     root            18 Oct 26 09:56 src
+
+$ docker run --rm shopapi:1.4.2 sh -c "ls node_modules | grep -cE \"^(eslint|nodemon)$\"; env | grep -iE \"secret|database\"; echo none"
+0
+none
+
+$ docker inspect shopapi:1.4.2 --format '{{json .Config.Labels}}' | jq
+{
+  "org.opencontainers.image.base.name": "",
+  "org.opencontainers.image.description": "Shop SAS product catalogue API",
+  "org.opencontainers.image.revision": "068ba9e",
+  "org.opencontainers.image.source": "https://git.shop-sas.example/platform/shopapi",
+  "org.opencontainers.image.title": "shopapi",
+  "org.opencontainers.image.vendor": "Shop SAS",
+  "org.opencontainers.image.version": "1.4.2"
+}
+
+$ docker inspect shopapi:1.4.2 --format '{{json .Config.Healthcheck}}' | jq -c
+{"Test":["CMD","wget","-q","-O","/dev/null","http://127.0.0.1:3000/health"],"Interval":15000000000,"Timeout":3000000000,"StartPeriod":10000000000,"StartInterval":1000000000,"Retries":3}
+
+$ docker run -d --name api -p 3000:3000 shopapi:1.4.2
+8840b1a95840dfb9e6a4a7824bfef4f2e5b1c3c65f2ad54ece088f5f0adb0dd1
+$ sleep 6 && docker inspect api --format '{{.State.Health.Status}}'
+healthy
+
+$ curl -s localhost:3000/products | jq
+[
+  {
+    "id": 1,
+    "name": "Clavier mécanique",
+    "price": 89.9,
+    "stock": 12
+  },
+  {
+    "id": 2,
+    "name": "Écran 27\"",
+    "price": 249,
+    "stock": 4
+  },
+  {
+    "id": 3,
+    "name": "Souris sans fil",
+    "price": 29.5,
+    "stock": 40
+  }
+]
+$ curl -s localhost:3000/
+{"service":"shopapi","version":"1.4.2"}
+
+$ docker exec api ps -o pid,user,args
+PID   USER     COMMAND
+    1 node     node src/server.js
+   24 node     ps -o pid,user,args
+
+$ time docker stop api
+api
+
+real	0m0,172s
+user	0m0,011s
+sys	0m0,007s
+$ docker logs api | tail -2
+{"level":30,"time":1793008616268,"pid":1,"hostname":"8840b1a95840","req":{"id":3,"method":"GET","url":"/","query":{},"params":{},"headers":{"host":"localhost:3000","user-agent":"curl/8.15.0","accept":"*/*"},"remoteAddress":"::ffff:172.17.0.1","remotePort":36144},"res":{"statusCode":200,"headers":{"x-powered-by":"Express","content-type":"application/json; charset=utf-8","content-length":"39","etag":"W/\"27-qUa+Zmy5N8oJwNEll5EY5rWX4Zs\""}},"responseTime":0,"msg":"request completed"}
+{"level":30,"time":1793008616327,"pid":1,"hostname":"8840b1a95840","signal":"SIGTERM","msg":"arrêt demandé"}
+$ docker inspect api --format "{{.State.ExitCode}}"
+0

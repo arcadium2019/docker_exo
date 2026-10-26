@@ -1,0 +1,18 @@
+# B1 : base téléchargée une fois, serveur partagé par l équipe
+$ docker run -d --name trivy-server -p 127.0.0.1:4954:4954 -v shop-trivy-cache:/root/.cache/trivy aquasec/trivy:0.76.1 server --listen 0.0.0.0:4954 --token "$TRIVY_TOKEN"
+$ trivy image --download-db-only   # (déjà fait : volume shop-trivy-cache partagé)
+$ time trivy image --server http://127.0.0.1:4954 --token … --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed --input .scan/shopapi_legacy.tar -f json | jq …
+"legacy: 22 CVE"
+real	0m0,747s
+$ time trivy image --server http://127.0.0.1:4954 --token … --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed --input .scan/shopapi_1.4.2.tar -f json | jq …
+"1.4.2: 0 CVE"
+real	0m0,271s
+$ … sans le bon token
+unauthenticated
+
+# B4 : scanner le SBOM (celui de l ANCIENNE 1.4.2, généré tout à l heure) au lieu de l image
+$ trivy sbom --severity HIGH,CRITICAL --ignore-unfixed sbom.json -f json | jq …
+22 CVE HIGH/CRITICAL, ex: brace-expansion@2.0.1 CVE-2026-102276, brace-expansion@2.0.1 CVE-2026-102278, brace-expansion@2.0.1 CVE-2026-13149, brace-expansion@2.0.1 CVE-2026-14257
+$ … même chose sur le SBOM attesté de la nouvelle release (récupéré depuis le registre)
+$ cosign verify-attestation … | jq -r .payload | base64 -d | jq .predicate > sbom-from-registry.json && trivy sbom sbom-from-registry.json
+0

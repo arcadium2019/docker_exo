@@ -1,0 +1,75 @@
+$ docker image ls shopapi:legacy
+IMAGE            ID             DISK USAGE   CONTENT SIZE   EXTRA
+shopapi:legacy   f4f132f7d5dc        738MB             0B        
+
+$ docker history shopapi:legacy
+IMAGE          CREATED          CREATED BY                                      SIZE      COMMENT
+f4f132f7d5dc   11 seconds ago   CMD ["/bin/sh" "-c" "npm start"]                0B        buildkit.dockerfile.v0
+<missing>      11 seconds ago   EXPOSE [3000/tcp]                               0B        buildkit.dockerfile.v0
+<missing>      11 seconds ago   ENV DATABASE_URL=postgres://shop:S3cret!@db.…   0B        buildkit.dockerfile.v0
+<missing>      11 seconds ago   ENV NODE_ENV=development                        0B        buildkit.dockerfile.v0
+<missing>      11 seconds ago   RUN /bin/sh -c npm install # buildkit           44.8MB    buildkit.dockerfile.v0
+<missing>      19 seconds ago   COPY . /app # buildkit                          5.63kB    buildkit.dockerfile.v0
+<missing>      19 seconds ago   WORKDIR /app                                    0B        buildkit.dockerfile.v0
+<missing>      19 seconds ago   RUN /bin/sh -c npm install -g nodemon # buil…   5.1MB     buildkit.dockerfile.v0
+<missing>      22 seconds ago   RUN /bin/sh -c apt-get install -y nodejs # b…   160MB     buildkit.dockerfile.v0
+<missing>      30 seconds ago   RUN /bin/sh -c curl -fsSL https://deb.nodeso…   2.09MB    buildkit.dockerfile.v0
+<missing>      35 seconds ago   RUN /bin/sh -c apt-get install -y curl wget …   367MB     buildkit.dockerfile.v0
+<missing>      59 seconds ago   RUN /bin/sh -c apt-get update # buildkit        81.3MB    buildkit.dockerfile.v0
+<missing>      59 seconds ago   ENV DEBIAN_FRONTEND=noninteractive              0B        buildkit.dockerfile.v0
+<missing>      3 weeks ago      /bin/sh -c #(nop)  CMD ["/bin/bash"]            0B        
+<missing>      3 weeks ago      /bin/sh -c #(nop) ADD file:b6c410e935243e562…   78.1MB    
+<missing>      3 weeks ago      /bin/sh -c #(nop)  LABEL org.opencontainers.…   0B        
+<missing>      3 weeks ago      /bin/sh -c #(nop)  ARG LAUNCHPAD_BUILD_ARCH     0B        
+<missing>      3 weeks ago      /bin/sh -c #(nop)  ARG RELEASE                  0B        
+
+$ docker run --rm shopapi:legacy env | grep -i -E 'secret|database'
+DATABASE_URL=postgres://shop:S3cret!@db.internal:5432/shop
+
+$ docker run --rm shopapi:legacy id
+uid=0(root) gid=0(root) groups=0(root)
+
+$ docker run --rm shopapi:legacy ls -la /app
+total 116
+drwxr-xr-x. 1 root root    58 Oct 26 09:53 .
+drwxr-xr-x. 1 root root     0 Oct 26 09:54 ..
+-rw-r--r--. 1 root root   179 Oct 26 09:50 .env
+-rw-r--r--. 1 root root    20 Oct 26 09:50 .gitignore
+-rw-r--r--. 1 root root   505 Oct 26 09:50 Dockerfile
+-rw-r--r--. 1 root root    47 Oct 26 09:50 dump-prod-2024.sql
+drwxr-xr-x. 1 root root  4260 Oct 26 09:53 node_modules
+-rw-r--r--. 1 root root 96529 Oct 26 09:53 package-lock.json
+-rw-r--r--. 1 root root   545 Oct 26 09:50 package.json
+drwxr-xr-x. 1 root root    18 Oct 26 09:50 src
+drwxr-xr-x. 1 root root    28 Oct 26 09:50 test
+
+$ docker run --rm shopapi:legacy cat /app/.env
+# fichier local d'un dev, commité par erreur
+DATABASE_URL=postgres://shop:S3cret!@localhost:5432/shop
+REDIS_URL=redis://localhost:6379
+AWS_SECRET_ACCESS_KEY=AKIAFAKEFAKEFAKEFAKE
+
+$ docker run --rm shopapi:legacy du -sh /app/node_modules
+30M	/app/node_modules
+
+$ docker run --rm shopapi:legacy sh -c "ls /app/node_modules | grep -E \"^(eslint|nodemon)$\"; ls /usr/lib/node_modules"
+eslint
+nodemon
+corepack
+nodemon
+npm
+
+$ docker run --rm shopapi:legacy sh -c "which vim git gcc make python3 curl wget"
+/usr/bin/vim
+/usr/bin/git
+/usr/bin/gcc
+/usr/bin/make
+/usr/bin/python3
+/usr/bin/curl
+/usr/bin/wget
+
+$ docker inspect shopapi:legacy --format '{{json .Config.Healthcheck}} {{json .Config.Labels}} {{json .Config.User}} {{json .Config.Cmd}}'
+null {"org.opencontainers.image.version":"22.04"} "" ["/bin/sh","-c","npm start"]
+
+$ docker inspect shopapi:legacy --format "{{len .RootFS.Layers}}"
+9

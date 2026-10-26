@@ -1,0 +1,14 @@
+# Simulated authenticated internal PyPI (step 1 only): proves the ARG leak on a build that succeeds.
+name: fake-internal-pypi
+services:
+  pypi:
+    image: pypiserver/pypiserver:v2.4.2
+    # Bypass the entrypoint (it chowns /data); packages are mounted read-only.
+    entrypoint: ["pypi-server"]
+    user: "9898:9898"
+    command: run -p 8080 -P /srv/htpasswd -a download,list,update /srv/packages
+    volumes:
+      - ./packages:/srv/packages:ro
+      - ./htpasswd:/srv/htpasswd:ro
+    ports:
+      - "127.0.0.1:8090:8080"

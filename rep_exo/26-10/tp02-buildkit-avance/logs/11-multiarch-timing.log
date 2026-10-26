@@ -1,0 +1,25 @@
+# Builds à froid (builder shop vidé avant chaque mesure), push compris
+  linux/amd64              total 11.1s
+  linux/arm64              total 11.4s
+  linux/amd64,linux/arm64  total 12.6s
+
+# Quelles étapes tournent sur quelle plateforme (build multi-arch) ? Les deux "builder" (cibles amd64 ET arm64) tournent en linux/amd64 = BUILDPLATFORM
+[linux/amd64 builder 1/3] RUN
+[linux/amd64 builder 2/3] COPY
+[linux/amd64 builder 3/3] RUN
+[linux/amd64 runtime 1/5] FROM
+[linux/amd64 runtime 2/5] WORKDIR
+[linux/amd64 runtime 3/5] COPY
+[linux/amd64 runtime 4/5] COPY
+[linux/amd64 runtime 5/5] COPY
+[linux/amd64 test 1/5] COPY
+[linux/amd64 test 2/5] RUN
+[linux/amd64 test 3/5] COPY
+[linux/amd64 test 4/5] COPY
+[linux/amd64 test 5/5] RUN
+[linux/amd64 users 1/1] RUN
+[linux/arm64 runtime 1/5] FROM
+[linux/arm64 runtime 2/5] WORKDIR
+[linux/arm64 runtime 3/5] COPY
+[linux/arm64 runtime 4/5] COPY
+[linux/arm64 runtime 5/5] COPY

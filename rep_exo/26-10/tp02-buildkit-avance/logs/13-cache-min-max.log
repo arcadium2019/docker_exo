@@ -1,0 +1,10 @@
+# Changement de code applicatif (commentaire ajouté dans worker/main.py) puis build sur runner neuf
+$ echo "# change" >> worker/main.py
+$ docker buildx prune --builder shop -af && time docker buildx build --builder shop --progress=plain --platform linux/amd64,linux/arm64 --secret id=pipconf,src=pip.conf --build-arg VERSION=1.0 --build-arg GIT_SHA=068ba9e -t localhost:5000/shop-worker:1.0-dev --push --cache-from type=registry,ref=localhost:5000/cache:worker-max .
+  total 9.3s | étapes CACHED 14 | pip install exécutés 0 | tests exécutés 1
+$ docker buildx prune --builder shop -af && time docker buildx build --builder shop --progress=plain --platform linux/amd64,linux/arm64 --secret id=pipconf,src=pip.conf --build-arg VERSION=1.0 --build-arg GIT_SHA=068ba9e -t localhost:5000/shop-worker:1.0-dev --push --cache-from type=registry,ref=localhost:5000/cache:worker-min .
+  total 13.0s | étapes CACHED 12 | pip install exécutés 1 | tests exécutés 1
+
+# Taille et contenu des caches exportés
+  cache:worker-max : 26 blobs, 113 Mio
+  cache:worker-min : 16 blobs, 90.3 Mio

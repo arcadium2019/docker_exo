@@ -1,0 +1,15 @@
+$ VERSION=1.0 GIT_SHA=068ba9e docker buildx bake --push
+#53 pushing manifest for localhost:5000/shop-worker:1.0@sha256:8b9153a284fa6fe8aaec58b1fb29a10ebfd2b89a5222ba0ea046b38595402eb4 0.4s done
+#53 pushing manifest for localhost:5000/shop-worker:sha-068ba9e@sha256:8b9153a284fa6fe8aaec58b1fb29a10ebfd2b89a5222ba0ea046b38595402eb4 0.3s done
+#60 pushing manifest for localhost:5000/shopapi:1.0@sha256:8924ef7dfcd1d0bcc87db3d1cad9e1723cc5753ac43393e139e8c68457ee7d53 0.5s done
+#60 pushing manifest for localhost:5000/shopapi:sha-068ba9e@sha256:8924ef7dfcd1d0bcc87db3d1cad9e1723cc5753ac43393e139e8c68457ee7d53 0.3s done
+exit=0
+
+# Sans QEMU : l'API reste en amd64, le worker (compilation croisée) en multi-arch
+$ VERSION=1.0 GIT_SHA=068ba9e docker buildx bake --set api.platform=linux/amd64 --push
+#51 pushing manifest for localhost:5000/shop-worker:1.0@sha256:7ea96dfaa43598d47e9945128b6d45209efd5971fc4538085e68e7fd6e628f63 0.5s done
+#52 pushing manifest for localhost:5000/shopapi:1.0@sha256:15232b30d08bd4cbbf3fb1abdf02a7d6972a2cbb650adfb08ad1506a6680bcdc 0.2s done
+#52 pushing manifest for localhost:5000/shopapi:sha-068ba9e@sha256:15232b30d08bd4cbbf3fb1abdf02a7d6972a2cbb650adfb08ad1506a6680bcdc 0.4s done
+#51 pushing manifest for localhost:5000/shop-worker:sha-068ba9e@sha256:7ea96dfaa43598d47e9945128b6d45209efd5971fc4538085e68e7fd6e628f63 0.3s done
+exit=0
+real 3.9s

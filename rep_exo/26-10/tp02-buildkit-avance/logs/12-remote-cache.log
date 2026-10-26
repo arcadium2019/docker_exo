@@ -1,0 +1,18 @@
+# ===== mode=max
+$ docker buildx prune --builder shop -af   # runner CI neuf
+$ time docker buildx build --builder shop --progress=plain --platform linux/amd64,linux/arm64 --secret id=pipconf,src=pip.conf --build-arg VERSION=1.0 --build-arg GIT_SHA=068ba9e -t localhost:5000/shop-worker:1.0 --push --cache-to type=registry,ref=localhost:5000/cache:worker-max,mode=max --cache-from type=registry,ref=localhost:5000/cache:worker-max .   # 1er build : export
+  total 16.2s | étapes CACHED 0 | pip install exécutés 3 | tests exécutés 1
+$ docker buildx prune --builder shop -af   # autre runner CI neuf
+$ time docker buildx build --builder shop --progress=plain --platform linux/amd64,linux/arm64 --secret id=pipconf,src=pip.conf --build-arg VERSION=1.0 --build-arg GIT_SHA=068ba9e -t localhost:5000/shop-worker:1.0 --push --cache-from type=registry,ref=localhost:5000/cache:worker-max .   # 2e runner : import
+  total 4.7s | étapes CACHED 20 | pip install exécutés 0 | tests exécutés 0
+# ===== mode=min
+$ docker buildx prune --builder shop -af   # runner CI neuf
+$ time docker buildx build --builder shop --progress=plain --platform linux/amd64,linux/arm64 --secret id=pipconf,src=pip.conf --build-arg VERSION=1.0 --build-arg GIT_SHA=068ba9e -t localhost:5000/shop-worker:1.0 --push --cache-to type=registry,ref=localhost:5000/cache:worker-min,mode=min --cache-from type=registry,ref=localhost:5000/cache:worker-min .   # 1er build : export
+  total 13.3s | étapes CACHED 0 | pip install exécutés 3 | tests exécutés 1
+$ docker buildx prune --builder shop -af   # autre runner CI neuf
+$ time docker buildx build --builder shop --progress=plain --platform linux/amd64,linux/arm64 --secret id=pipconf,src=pip.conf --build-arg VERSION=1.0 --build-arg GIT_SHA=068ba9e -t localhost:5000/shop-worker:1.0 --push --cache-from type=registry,ref=localhost:5000/cache:worker-min .   # 2e runner : import
+  total 5.3s | étapes CACHED 20 | pip install exécutés 0 | tests exécutés 0
+
+# Référence : runner neuf SANS cache distant
+$ time docker buildx build --builder shop --progress=plain --platform linux/amd64,linux/arm64 --secret id=pipconf,src=pip.conf --build-arg VERSION=1.0 --build-arg GIT_SHA=068ba9e -t localhost:5000/shop-worker:1.0 --push .
+  total 13.4s | étapes CACHED 0 | pip install exécutés 3 | tests exécutés 1

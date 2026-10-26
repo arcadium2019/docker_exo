@@ -1,0 +1,39 @@
+# Préparation : busybox poussé en demo-gc:a, puis retag côté registre (GET manifest + PUT) en demo-gc:b
+$ MT=$("${CURL[@]}" -u ci:... -I -H "Accept: $ACCEPT" $REG/v2/demo-gc/manifests/a | awk -F": " "tolower(\$1)==\"content-type\"{print \$2}")
+MT=application/vnd.docker.distribution.manifest.v2+json
+$ "${CURL[@]}" -u ci:... -H "Accept: $MT" $REG/v2/demo-gc/manifests/a -o m.json
+$ "${CURL[@]}" -u ci:... -X PUT -H "Content-Type: $MT" --data-binary @m.json $REG/v2/demo-gc/manifests/b
+201
+$ tags + digests
+{"name":"demo-gc","tags":["a","b"]}
+a -> Docker-Content-Digest: sha256:63bb1322b9692d0a4ba0084a8168277d767a73048fc79a4869b912fe32d26bee
+b -> Docker-Content-Digest: sha256:63bb1322b9692d0a4ba0084a8168277d767a73048fc79a4869b912fe32d26bee
+
+$ docker compose exec registry du -sh /var/lib/registry/docker/registry/v2/blobs   # avant
+97.4M	/var/lib/registry/docker/registry/v2/blobs
+
+# Un tag ne peut pas être supprimé par son nom :
+$ "${CURL[@]}" -u ci:... -X DELETE $REG/v2/demo-gc/manifests/a
+{"errors":[{"code":"DIGEST_INVALID","message":"provided digest did not match uploaded content"}]}
+ -> 400
+# dev ne peut pas supprimer :
+{"errors":[{"code":"DENIED","message":"push requires the ci account"}]} -> 403
+$ "${CURL[@]}" -u ci:... -X DELETE $REG/v2/demo-gc/manifests/sha256:63bb1322b9692d0a4ba0084a8168277d767a73048fc79a4869b912fe32d26bee
+202
+$ "${CURL[@]}" -u ci:... $REG/v2/demo-gc/tags/list
+{"name":"demo-gc","tags":null}
+
+
+$ docker compose exec registry registry garbage-collect --delete-untagged /etc/docker/registry/config.yml
+demo-gc
+46 blobs marked, 4 blobs and 0 manifests eligible for deletion
+blob eligible for deletion: sha256:2a9999ca1f0186d6d98a4e628ba4f3e469837cfa2902dd73601e6dcd0f701a6d
+time="2026-10-26T10:07:31.087699057Z" level=info msg="Deleting blob: /docker/registry/v2/blobs/sha256/2a/2a9999ca1f0186d6d98a4e628ba4f3e469837cfa2902dd73601e6dcd0f701a6d" go.version=go1.20.8 instance.id=8b45e229-5949-4198-90c5-2ad333cc0b12 service=registry 
+blob eligible for deletion: sha256:30ecbe1509090b38ef3260f3609d64d8261230464eaa4d235901db496e9647fb
+time="2026-10-26T10:07:31.088223524Z" level=info msg="Deleting blob: /docker/registry/v2/blobs/sha256/30/30ecbe1509090b38ef3260f3609d64d8261230464eaa4d235901db496e9647fb" go.version=go1.20.8 instance.id=8b45e229-5949-4198-90c5-2ad333cc0b12 service=registry 
+blob eligible for deletion: sha256:63bb1322b9692d0a4ba0084a8168277d767a73048fc79a4869b912fe32d26bee
+time="2026-10-26T10:07:31.088570389Z" level=info msg="Deleting blob: /docker/registry/v2/blobs/sha256/63/63bb1322b9692d0a4ba0084a8168277d767a73048fc79a4869b912fe32d26bee" go.version=go1.20.8 instance.id=8b45e229-5949-4198-90c5-2ad333cc0b12 service=registry 
+blob eligible for deletion: sha256:a3ed95caeb02ffe68cdd9fd84406680ae93d633cb16422d00e8a7c22955b46d4
+time="2026-10-26T10:07:31.088627636Z" level=info msg="Deleting blob: /docker/registry/v2/blobs/sha256/a3/a3ed95caeb02ffe68cdd9fd84406680ae93d633cb16422d00e8a7c22955b46d4" go.version=go1.20.8 instance.id=8b45e229-5949-4198-90c5-2ad333cc0b12 service=registry 
+$ docker compose exec registry du -sh .../blobs   # après
+95.2M	/var/lib/registry/docker/registry/v2/blobs

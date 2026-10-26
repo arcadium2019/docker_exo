@@ -1,0 +1,7 @@
+$ curl -s -o /dev/null -w "%{http_code}" localhost:8089/
+200
+$ curl -s -o /dev/null -w "%{http_code}" localhost:8089/v2/_catalog          # via le proxy de l UI, sans auth
+401
+$ curl -s -u dev:dev-pull-2024 localhost:8089/v2/_catalog
+{"repositories":["shopapi"]}
+

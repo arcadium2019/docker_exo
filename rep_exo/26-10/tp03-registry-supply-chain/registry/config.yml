@@ -1,0 +1,34 @@
+# Private registry (behind the nginx TLS + auth gateway).
+version: 0.1
+log:
+  level: info
+  formatter: text
+  fields:
+    service: registry
+storage:
+  filesystem:
+    rootdirectory: /var/lib/registry
+  delete:
+    enabled: true
+  cache:
+    blobdescriptor: inmemory
+  maintenance:
+    uploadpurging:
+      enabled: true
+      age: 168h
+      interval: 24h
+      dryrun: false
+http:
+  addr: :5000
+  # Shared secret for upload state, must be stable across restarts/replicas.
+  secret: ${REGISTRY_HTTP_SECRET}
+  relativeurls: false
+  headers:
+    X-Content-Type-Options: [nosniff]
+  debug:
+    addr: :5005
+health:
+  storagedriver:
+    enabled: true
+    interval: 10s
+    threshold: 3

@@ -1,0 +1,28 @@
+# Données : 5 builds de branche datés (SOURCE_DATE_EPOCH = date du commit) + sha-068ba9e = même manifeste que 1.4.2 (release promue depuis ce build)
+$ curl …/v2/shopapi/tags/list
+{"name":"shopapi","tags":["1.4.2","1.4.2-distroless","sha-c2e8f53","sha-a1f3c20","sha-e9c1d07","sha-b7d9e41","sha-d4a6b19","sha-068ba9e"]}
+
+$ export REG_PASSWORD=… CURL_OPTS="--cacert registry/certs/ca.crt --resolve registry.local:5000:127.0.0.1"
+$ ./retention.sh shopapi 2
+repository=shopapi keep=2 apply=false protected=2 candidates=6
+KEEP    sha-068ba9e  (2026-10-26T10:58:58.261199269+01:00)
+KEEP    sha-d4a6b19  (2026-09-26T14:13:20Z)
+DELETE  sha-b7d9e41  (2026-09-25T14:13:20Z) sha256:6b3623c9a7e62d4bc1d3c10a93a174e53c37a7d2e7013e911f9a69647b409056  [dry-run]
+DELETE  sha-e9c1d07  (2026-09-24T14:13:20Z) sha256:cc17e0510ed9b3c1e7b4acac11f899880064600e626e0cfea57b4a881a095e42  [dry-run]
+DELETE  sha-a1f3c20  (2026-09-23T14:13:20Z) sha256:dffcdd9bcc476e42642df81f6b0c4e6734b5489d29133b3962e4191d184efcaa  [dry-run]
+DELETE  sha-c2e8f53  (2026-09-22T14:13:20Z) sha256:b06d5909c18005da84ede61cad0c29df3858b390e32678b903712ca1de31e317  [dry-run]
+
+$ ./retention.sh shopapi 2 --apply
+repository=shopapi keep=2 apply=true protected=2 candidates=6
+KEEP    sha-068ba9e  (2026-10-26T10:58:58.261199269+01:00)
+KEEP    sha-d4a6b19  (2026-09-26T14:13:20Z)
+DELETED sha-b7d9e41  (2026-09-25T14:13:20Z) sha256:6b3623c9a7e62d4bc1d3c10a93a174e53c37a7d2e7013e911f9a69647b409056
+DELETED sha-e9c1d07  (2026-09-24T14:13:20Z) sha256:cc17e0510ed9b3c1e7b4acac11f899880064600e626e0cfea57b4a881a095e42
+DELETED sha-a1f3c20  (2026-09-23T14:13:20Z) sha256:dffcdd9bcc476e42642df81f6b0c4e6734b5489d29133b3962e4191d184efcaa
+DELETED sha-c2e8f53  (2026-09-22T14:13:20Z) sha256:b06d5909c18005da84ede61cad0c29df3858b390e32678b903712ca1de31e317
+
+$ curl …/v2/shopapi/tags/list
+{"name":"shopapi","tags":["1.4.2","1.4.2-distroless","sha-d4a6b19","sha-068ba9e"]}
+$ REG_USER=dev REG_PASSWORD=dev-pull-2024 ./retention.sh shopapi 0 --apply   # dev ne peut pas supprimer
+SKIP    sha-068ba9e  (2026-10-26T10:58:58.261199269+01:00) same digest as protected tag 1.4.2
+curl: (22) The requested URL returned error: 403

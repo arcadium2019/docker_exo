@@ -1,0 +1,28 @@
+# Le daemon.json ne peut pas être modifié sans sudo : on tire explicitement via le mirror.
+$ time docker pull localhost:5001/library/alpine:3.20   # pull 1
+Digest: sha256:d9e853e87e55526f6b2917df91a2115c36dd7c696a35be12163d44e6e2a4b6bc
+Status: Downloaded newer image for localhost:5001/library/alpine:3.20
+real	0m2,255s
+$ time docker pull localhost:5001/library/alpine:3.20   # pull 2
+Digest: sha256:d9e853e87e55526f6b2917df91a2115c36dd7c696a35be12163d44e6e2a4b6bc
+Status: Downloaded newer image for localhost:5001/library/alpine:3.20
+real	0m0,591s
+
+$ curl -s localhost:5001/v2/_catalog
+{"repositories":["library/alpine"]}
+$ docker compose logs mirror | grep -E "alpine" (extrait)
+msg="Challenge established with upstream : {https   registry-1.docker.io /v2/  %!s(bool=false) %!s(bool=false)   } &{{{%!s(int32=0) %!s(uint32=0)} %!s(uint32=0) %!s(uint32=0) {{} %!s(int32=0)} {{} %!s(int32=0)}} map[https://registry-1.docker.io:443/v2/:[{bearer map[realm:https://auth.docker.io/token service:registry.docker.io]}]]}" http.request.method=HEAD http.request.uri="/v2/library/alpine/manifests/3.20"
+msg="Adding new scheduler entry for library/alpine@sha256:d9e853e87e55526f6b2917df91a2115c36dd7c696a35be12163d44e6e2a4b6bc with ttl=167h59m59.999996059s"
+msg="response completed" http.request.method=HEAD http.request.uri="/v2/library/alpine/manifests/3.20" http.response.status=200
+msg="response completed" http.request.method=GET http.request.uri="/v2/library/alpine/manifests/sha256:d9e853e87e55526f6b2917df91a2115c36dd7c696a35be12163d44e6e2a4b6bc" http.response.status=200
+msg="Adding new scheduler entry for library/alpine@sha256:c64c687cbea9300178b30c95835354e34c4e4febc4badfe27102879de0483b5e with ttl=167h59m59.999998358s"
+msg="response completed" http.request.method=GET http.request.uri="/v2/library/alpine/manifests/sha256:c64c687cbea9300178b30c95835354e34c4e4febc4badfe27102879de0483b5e" http.response.status=200
+msg="response completed" http.request.method=GET http.request.uri="/v2/library/alpine/blobs/sha256:bf8527eb54c3680e728d5b4b383a8ba730d72dae7236fbc8dff97ed6b224a731" http.response.status=200
+msg="Adding new scheduler entry for library/alpine@sha256:bf8527eb54c3680e728d5b4b383a8ba730d72dae7236fbc8dff97ed6b224a731 with ttl=167h59m59.999998778s"
+msg="response completed" http.request.method=GET http.request.uri="/v2/library/alpine/blobs/sha256:25f1d6b1951ac8eb3740558fe94cb83d377bdadf95fd9f98b50d2e1b96130471" http.response.status=200
+msg="Adding new scheduler entry for library/alpine@sha256:25f1d6b1951ac8eb3740558fe94cb83d377bdadf95fd9f98b50d2e1b96130471 with ttl=167h59m59.999998301s"
+msg="response completed" http.request.method=HEAD http.request.uri="/v2/library/alpine/manifests/3.20" http.response.status=200
+msg="response completed" http.request.method=GET http.request.uri="/v2/library/alpine/manifests/sha256:d9e853e87e55526f6b2917df91a2115c36dd7c696a35be12163d44e6e2a4b6bc" http.response.status=200
+msg="response completed" http.request.method=GET http.request.uri="/v2/library/alpine/manifests/sha256:c64c687cbea9300178b30c95835354e34c4e4febc4badfe27102879de0483b5e" http.response.status=200
+msg="response completed" http.request.method=GET http.request.uri="/v2/library/alpine/blobs/sha256:bf8527eb54c3680e728d5b4b383a8ba730d72dae7236fbc8dff97ed6b224a731" http.response.status=200
+msg="response completed" http.request.method=GET http.request.uri="/v2/library/alpine/blobs/sha256:25f1d6b1951ac8eb3740558fe94cb83d377bdadf95fd9f98b50d2e1b96130471" http.response.status=200

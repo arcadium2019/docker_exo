@@ -1,0 +1,43 @@
+$ echo "$CI_PASSWORD" | docker login localhost:5000 -u ci --password-stdin
+
+Configure a credential helper to remove this warning. See
+https://docs.docker.com/go/credential-store/
+
+Login Succeeded
+$ docker tag shopapi:1.4.2 localhost:5000/shopapi:1.4.2 && docker push localhost:5000/shopapi:1.4.2
+The push refers to repository [localhost:5000/shopapi]
+e95d1968bb2d: Preparing
+92694809b928: Preparing
+0c53799acaf1: Preparing
+60dbca0eb6ad: Preparing
+afa543f85b46: Preparing
+e10358715ead: Preparing
+4983b93ee796: Preparing
+29df493baa13: Preparing
+e10358715ead: Waiting
+4983b93ee796: Waiting
+29df493baa13: Waiting
+92694809b928: Pushed
+e95d1968bb2d: Pushed
+60dbca0eb6ad: Pushed
+afa543f85b46: Pushed
+e10358715ead: Pushed
+0c53799acaf1: Pushed
+29df493baa13: Pushed
+4983b93ee796: Pushed
+1.4.2: digest: sha256:0e322832db317fd07e57b36aef41cf23d5f13cae1611bdc0f659ca434add9756 size: 1991
+
+# Compte dev : pull OK, push refusé
+
+https://docs.docker.com/go/credential-store/
+
+Login Succeeded
+$ docker tag alpine… localhost:5000/dev-test:1 && docker push (en dev)
+5a9bfd996c6d: Preparing
+denied: {"errors":[{"code":"DENIED","message":"push requires the ci account"}]}
+$ docker rmi localhost:5000/shopapi:1.4.2 && docker pull localhost:5000/shopapi:1.4.2 (en dev)
+Status: Downloaded newer image for localhost:5000/shopapi:1.4.2
+localhost:5000/shopapi:1.4.2
+
+$ curl -u dev:dev-pull-2024 https://registry.local:5000/v2/_catalog
+{"repositories":["shopapi"]}

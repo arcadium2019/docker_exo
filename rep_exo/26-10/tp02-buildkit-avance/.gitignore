@@ -1,0 +1,3 @@
+# Simulated internal PyPI: downloaded wheels and its htpasswd are regenerated locally.
+fake-internal-pypi/packages/
+fake-internal-pypi/htpasswd

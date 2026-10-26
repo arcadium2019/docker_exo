@@ -1,0 +1,19 @@
+$ docker compose -f e2e-compose.yml up -d
+ Container shop-e2e-worker-1 Started 
+api Up 8 seconds (healthy)
+redis Up 13 seconds (healthy)
+worker Up 8 seconds (healthy)
+$ curl -X POST localhost:3003/orders (quantity 2 puis 500)
+{"id":1793010703042,"productId":1,"quantity":2,"status":"pending","createdAt":"2026-10-26T10:31:43.042Z"}
+{"id":1793010703048,"productId":2,"quantity":500,"status":"pending","createdAt":"2026-10-26T10:31:43.048Z"}
+$ docker compose logs worker
+{"ts":"2026-10-26 10:31:43,042","level":"INFO","msg":"commande 1793010703042 -> confirmed"}
+{"ts":"2026-10-26 10:31:43,048","level":"INFO","msg":"commande 1793010703048 -> rejected"}
+$ docker compose exec worker python -c "…/metrics" | grep orders_processed
+orders_processed_total{status="confirmed"} 1.0
+orders_processed_total{status="rejected"} 1.0
+$ time docker compose stop worker
+real	0m0,918s
+{"ts":"2026-10-26 10:31:46,375","level":"INFO","msg":"signal 15 reçu, arrêt en cours"}
+{"ts":"2026-10-26 10:31:47,108","level":"INFO","msg":"worker arrêté proprement"}
+ Network shop-e2e_default Removed 

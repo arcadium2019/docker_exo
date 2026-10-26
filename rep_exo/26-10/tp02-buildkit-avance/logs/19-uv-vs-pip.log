@@ -1,0 +1,14 @@
+# Builds complets (builder + test + runtime), sortie cacheonly, image de base déjà présente
+  Dockerfile     linux/amd64   à froid           total   7.4s
+  Dockerfile     linux/amd64   cache mount plein  total   4.5s
+  Dockerfile.uv  linux/amd64   à froid           total   5.5s
+  Dockerfile.uv  linux/amd64   cache mount plein  total   3.0s
+  Dockerfile     linux/amd64,linux/arm64 à froid           total   7.5s
+  Dockerfile     linux/amd64,linux/arm64 cache mount plein  total   5.3s
+  Dockerfile.uv  linux/amd64,linux/arm64 à froid           total   8.5s
+  Dockerfile.uv  linux/amd64,linux/arm64 cache mount plein  total   4.9s
+# Durée des étapes d installation (amd64) : [builder 3/3] = deps runtime (3 paquets), [test 2/5] = deps runtime + dev (8 paquets)
+  Dockerfile     à froid           test 2.7 s   builder 3.9 s   
+  Dockerfile     cache mount plein  test 2.1 s   builder 3.1 s   
+  Dockerfile.uv  à froid           test 2.9 s   builder 2.7 s   
+  Dockerfile.uv  cache mount plein  test 0.1 s   builder 0.1 s   

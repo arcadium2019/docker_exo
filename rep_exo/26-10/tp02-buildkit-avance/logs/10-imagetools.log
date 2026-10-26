@@ -1,0 +1,80 @@
+$ docker buildx imagetools inspect localhost:5000/shop-worker:1.0
+ERROR: failed to do request: Head "https://localhost:5000/v2/shop-worker/manifests/1.0": tls: failed to verify certificate: x509: certificate signed by unknown authority
+
+# imagetools tourne côté CLIENT (pas dans BuildKit) : il lui faut la CA, et le builder shop pour la règle « https sur localhost »
+$ SSL_CERT_FILE=registry/trust/ca.crt docker buildx imagetools inspect --builder shop localhost:5000/shop-worker:1.0
+Name:      localhost:5000/shop-worker:1.0
+MediaType: application/vnd.oci.image.index.v1+json
+Digest:    sha256:96829ea8972d88835a382f35378be5cc3a4b40d93143a375760c9f96741e1ea9
+           
+Manifests: 
+  Name:        localhost:5000/shop-worker:1.0@sha256:c3ddea4b195fbcd4ffb5a36c5c6693df6b36c347e45cb4f2b9ec49f0a2a4c4d5
+  MediaType:   application/vnd.oci.image.manifest.v1+json
+  Platform:    linux/amd64
+               
+  Name:        localhost:5000/shop-worker:1.0@sha256:4beb4ac778d00cc7597e4ba0f3af736bafada0177523580e24b6c96f52bb50db
+  MediaType:   application/vnd.oci.image.manifest.v1+json
+  Platform:    linux/arm64
+               
+  Name:        localhost:5000/shop-worker:1.0@sha256:fb7b1317be9aad0d1341e2efca14353dbef3e67762b17b98e87175a3f5cad6dd
+  MediaType:   application/vnd.oci.image.manifest.v1+json
+  Platform:    unknown/unknown
+  Annotations: 
+    vnd.docker.reference.digest: sha256:c3ddea4b195fbcd4ffb5a36c5c6693df6b36c347e45cb4f2b9ec49f0a2a4c4d5
+    vnd.docker.reference.type:   attestation-manifest
+               
+  Name:        localhost:5000/shop-worker:1.0@sha256:b1af16da1edf50eda0b88a08483aee37ff5e226426b6231dc7cb14c4c9ae2835
+  MediaType:   application/vnd.oci.image.manifest.v1+json
+  Platform:    unknown/unknown
+  Annotations: 
+    vnd.docker.reference.digest: sha256:4beb4ac778d00cc7597e4ba0f3af736bafada0177523580e24b6c96f52bb50db
+    vnd.docker.reference.type:   attestation-manifest
+
+$ crane manifest localhost:5000/shop-worker:1.0 | jq
+{
+  "mediaType": "application/vnd.oci.image.index.v1+json",
+  "manifests": [
+    {
+      "platform": {
+        "architecture": "amd64",
+        "os": "linux"
+      },
+      "digest": "sha256:c3ddea4b195f",
+      "annotations": null
+    },
+    {
+      "platform": {
+        "architecture": "arm64",
+        "os": "linux"
+      },
+      "digest": "sha256:4beb4ac778d0",
+      "annotations": null
+    },
+    {
+      "platform": {
+        "architecture": "unknown",
+        "os": "unknown"
+      },
+      "digest": "sha256:fb7b1317be9a",
+      "annotations": {
+        "vnd.docker.reference.digest": "sha256:c3ddea4b195fbcd4ffb5a36c5c6693df6b36c347e45cb4f2b9ec49f0a2a4c4d5",
+        "vnd.docker.reference.type": "attestation-manifest"
+      }
+    },
+    {
+      "platform": {
+        "architecture": "unknown",
+        "os": "unknown"
+      },
+      "digest": "sha256:b1af16da1edf",
+      "annotations": {
+        "vnd.docker.reference.digest": "sha256:4beb4ac778d00cc7597e4ba0f3af736bafada0177523580e24b6c96f52bb50db",
+        "vnd.docker.reference.type": "attestation-manifest"
+      }
+    }
+  ]
+}
+
+# Les binaires natifs de chaque variante sont-ils pour la bonne architecture ? (e_machine ELF : 0x3e = x86-64, 0xb7 = AArch64)
+linux/amd64 : _psycopg.cpython-312-x86_64-linux-gnu.so e_machine=0x3e  |  python3.12 e_machine=0x3e  |  config: {"architecture":"amd64","os":"linux","user":"10001:10001"}
+linux/arm64 : _psycopg.cpython-312-aarch64-linux-gnu.so e_machine=0xb7  |  python3.12 e_machine=0xb7  |  config: {"architecture":"arm64","os":"linux","user":"10001:10001"}

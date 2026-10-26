@@ -1,0 +1,21 @@
+$ source registry-env.sh   # REG, CURL (CA + --resolve registry.local), ACCEPT
+
+# Lister les dépôts
+$ "${CURL[@]}" -u dev:dev-pull-2024 "$REG/v2/_catalog" | jq
+{"repositories":["shopapi"]}
+
+# Lister les tags d un dépôt
+$ "${CURL[@]}" -u dev:dev-pull-2024 "$REG/v2/shopapi/tags/list" | jq
+{"name":"shopapi","tags":["1.4.2","sha-a1f3c20","sha-b7d9e41","sha-c2e8f53","sha-d4a6b19","sha-e9c1d07","1.4.2-distroless"]}
+
+# Digest d un tag : HEAD + bon Accept, en-tête Docker-Content-Digest
+$ "${CURL[@]}" -u dev:dev-pull-2024 -I -H "Accept: $ACCEPT" "$REG/v2/shopapi/manifests/1.4.2"
+HTTP/1.1 200 OK
+Content-Type: application/vnd.docker.distribution.manifest.v2+json
+Content-Length: 1991
+Docker-Content-Digest: sha256:0e322832db317fd07e57b36aef41cf23d5f13cae1611bdc0f659ca434add9756
+
+# Sans le bon Accept (le registre convertirait/refuserait) :
+$ "${CURL[@]}" -u dev:... -I "$REG/v2/shopapi/manifests/1.4.2" | grep -i content-type
+Content-Type: application/vnd.docker.distribution.manifest.v1+prettyjws
+Docker-Content-Digest: sha256:542dc8bacd28b394a20cd17b9f13e4a21a6cad43f4a9bc4c3684e374d4d13ac7

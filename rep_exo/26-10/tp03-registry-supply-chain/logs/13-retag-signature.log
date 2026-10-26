@@ -1,0 +1,12 @@
+$ docker tag shopapi:1.4.2 localhost:5000/shopapi:1.4.2 && docker push localhost:5000/shopapi:1.4.2   # image MODIFIÉE (fix CVE), même tag
+1.4.2: digest: sha256:4f902901f59ee8f4e8fb7c21681f070e658cb3da6c311d25b9b80ef5610e4e82 size: 2202
+$ crane digest localhost:5000/shopapi:1.4.2
+sha256:4f902901f59ee8f4e8fb7c21681f070e658cb3da6c311d25b9b80ef5610e4e82
+
+$ cosign verify --key cosign.pub --insecure-ignore-tlog=true localhost:5000/shopapi:1.4.2
+Error: no signatures found
+error during command execution: no signatures found
+exit=10
+
+$ cosign verify --key cosign.pub --insecure-ignore-tlog=true localhost:5000/shopapi@sha256:0e322832db317fd07e57b36aef41cf23d5f13cae1611bdc0f659ca434add9756 | jq -r '.[0].critical.image'
+{"docker-manifest-digest":"sha256:0e322832db317fd07e57b36aef41cf23d5f13cae1611bdc0f659ca434add9756"}

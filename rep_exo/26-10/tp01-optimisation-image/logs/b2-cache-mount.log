@@ -1,0 +1,21 @@
+# 1) Builder vide (ni couches ni cache mount)
+$ docker buildx prune --builder shop -af
+Total:	308.5MB
+$ time docker buildx build --builder shop --progress=plain --build-arg APP_VERSION=1.4.2 --build-arg GIT_SHA=068ba9e -t shopapi:1.4.2 .
+    npm ci : 20.81 added 222 packages in 21s
+    total 29.5s
+# 2) Couches vidées, cache mount /root/.npm conservé
+$ docker buildx prune --builder shop -f --filter type=regular
+Total:	258.3MB
+$ time docker buildx build --builder shop --progress=plain --build-arg APP_VERSION=1.4.2 --build-arg GIT_SHA=068ba9e -t shopapi:1.4.2 .
+    npm ci : 0.646 added 222 packages in 540ms
+    total 6.7s
+# 3) --no-cache (cache mount plein mais ignoré)
+$ time docker buildx build --builder shop --progress=plain --build-arg APP_VERSION=1.4.2 --build-arg GIT_SHA=068ba9e -t shopapi:1.4.2 --no-cache .
+    npm ci : 20.54 added 222 packages in 20s
+    total 23.2s
+# 4) Couches vidées à nouveau : le mount d origine est toujours là
+Total:	324.8MB
+$ time docker buildx build --builder shop --progress=plain --build-arg APP_VERSION=1.4.2 --build-arg GIT_SHA=068ba9e -t shopapi:1.4.2 .
+    npm ci : 0.674 added 222 packages in 554ms
+    total 9.1s

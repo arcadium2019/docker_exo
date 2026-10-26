@@ -1,0 +1,6 @@
+$ docker compose -f compose.prod.example.yml up -d && docker compose ps
+ Container shop-prod-shopapi-1 Started 
+localhost:5000/shopapi:1.4.2@sha256:4f902901f59ee8f4e8fb7c21681f070e658cb3da6c311d25b9b80ef5610e4e82  Up 4 seconds (healthy)
+$ curl -s localhost:3002/
+{"service":"shopapi","version":"1.4.2"}
+ Network shop-prod_default Removed 

@@ -1,0 +1,12 @@
+$ docker buildx du --verbose (npm)
+$ docker build --progress=plain --build-arg APP_VERSION=1.4.2 --build-arg GIT_SHA=068ba9e -t shopapi:1.4.2 --no-cache .  #1
+25.79 added 222 packages in 26s
+    total 28.7s
+    npm cachemount 6g02ipt9t165de3cy8l1yr8ew 5.708MB
+$ docker build --progress=plain --build-arg APP_VERSION=1.4.2 --build-arg GIT_SHA=068ba9e -t shopapi:1.4.2 --no-cache .  #2
+28.43 added 222 packages in 28s
+    total 33.7s
+    npm cachemount fsk3mm0ruatm75ggwdq7o3kub 5.708MB
+$ docker builder prune -f --filter type=regular && docker build --progress=plain --build-arg APP_VERSION=1.4.2 --build-arg GIT_SHA=068ba9e -t shopapi:1.4.2 .   (cache de couches vide, mount conservé)
+    total 0.8s
+    npm cachemount fsk3mm0ruatm75ggwdq7o3kub 5.708MB

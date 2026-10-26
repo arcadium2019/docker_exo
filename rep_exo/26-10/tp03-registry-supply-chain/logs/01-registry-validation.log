@@ -1,0 +1,23 @@
+$ curl https://registry.local:5000/v2/          # sans CA
+curl: (60) SSL certificate problem: unable to get local issuer certificate
+$ curl --cacert certs/ca.crt -i https://registry.local:5000/v2/   # 401
+HTTP/1.1 401 Unauthorized
+WWW-Authenticate: Basic realm="Shop SAS registry"
+401
+$ curl --cacert certs/ca.crt -u dev:mauvais https://registry.local:5000/v2/
+401
+$ curl --cacert certs/ca.crt -u dev:dev-pull-2024 https://registry.local:5000/v2/_catalog
+{"repositories":[]}
+$ curl -k -u dev:dev-pull-2024 https://registry.local:5000/v2/_catalog   (commande de l'énoncé)
+{"repositories":[]}
+$ curl -u dev:... -X POST https://registry.local:5000/v2/test/blobs/uploads/   # dev ne peut pas pousser
+{"errors":[{"code":"DENIED","message":"push requires the ci account"}]} -> 403
+$ curl -u ci:... -X POST https://registry.local:5000/v2/test/blobs/uploads/    # ci peut
+202
+
+$ openssl s_client -connect 127.0.0.1:5000 -servername registry.local | openssl x509 -noout -subject -ext subjectAltName
+Protocol: TLSv1.3
+Verify return code: 0 (ok)
+subject=O=Shop SAS, CN=registry.local
+X509v3 Subject Alternative Name: 
+    DNS:registry.local, DNS:localhost, IP Address:127.0.0.1

@@ -1,0 +1,33 @@
+$ docker buildx build --builder shop --platform linux/amd64,linux/arm64 --secret id=pipconf,src=pip.conf --build-arg VERSION=1.0 --build-arg GIT_SHA=068ba9e --provenance=mode=max --sbom=true -t localhost:5000/shop-worker:1.0-attested --push .
+exit=0
+
+$ docker buildx imagetools inspect localhost:5000/shop-worker:1.0-attested --format '{{json .Provenance}}' | jq '."linux/amd64".SLSA | {buildType, builder: .runDetails.builder.id, invocation: .buildDefinition.externalParameters.request.args // .invocation.parameters.args, materials: [(.buildDefinition.resolvedDependencies // .materials)[]?.uri]}'
+{
+  "predicateType": "?",
+  "args": {
+    "build-arg:GIT_SHA": "068ba9e",
+    "build-arg:VERSION": "1.0",
+    "cmdline": "docker/dockerfile:1.7",
+    "source": "docker/dockerfile:1.7"
+  },
+  "secrets": [
+    {
+      "id": "pipconf",
+      "optional": true
+    }
+  ],
+  "materials": [
+    "pkg:docker/docker/buildkit-syft-scanner@stable-1",
+    "pkg:docker/docker/dockerfile@1.7",
+    "pkg:docker/python@3.12.15-slim-trixie?platform=linux%2Famd64"
+  ]
+}
+
+$ docker buildx imagetools inspect localhost:5000/shop-worker:1.0-attested --format '{{json .SBOM}}' | jq '."linux/arm64".SPDX.packages | length, (map(.name) | map(select(test("^(redis|psycopg2-binary|prometheus-client|pytest|ruff)$")))) '
+99
+["prometheus-client","psycopg2-binary","redis"]
+
+# Et si on avait passé le secret en --build-arg ? (provenance mode=max)
+$ docker buildx build ... --build-arg PIP_INDEX_URL=https://svc-ci:Tr3sS3cret@pypi.internal.example.com/simple --provenance=mode=max -t localhost:5000/shop-worker:leak-provenance --push .
+$ docker buildx imagetools inspect localhost:5000/shop-worker:leak-provenance --format '{{json .Provenance}}' | grep -o 'svc-ci:[^@]*@'
+svc-ci:Tr3sS3cret@

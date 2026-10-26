@@ -1,0 +1,57 @@
+# syntax=docker/dockerfile:1.7
+# shopapi - distroless variant (bonus B1): no shell, no package manager, no wget.
+ARG NODE_IMAGE=node:20.20.2-alpine3.23
+ARG RUNTIME_IMAGE=gcr.io/distroless/nodejs20-debian12:nonroot@sha256:2cd820156cf039c8b54ae2d2a97e424b6729070714de8707a6b79f20d56f6a9a
+
+FROM ${NODE_IMAGE} AS base
+WORKDIR /app
+COPY package.json package-lock.json ./
+
+FROM base AS deps-dev
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --ignore-scripts --no-audit --no-fund
+
+FROM deps-dev AS test
+COPY src ./src
+COPY test ./test
+RUN npm run lint && npm test && touch /tmp/.tests-passed
+
+FROM base AS deps-prod
+RUN --mount=type=cache,target=/root/.npm \
+    --mount=type=bind,from=test,source=/tmp/.tests-passed,target=/tmp/.tests-passed \
+    npm ci --omit=dev --ignore-scripts --no-audit --no-fund
+
+# Healthcheck without wget: a tiny Node script run by the runtime's own interpreter.
+FROM base AS healthcheck
+RUN printf '%s\n' \
+    "fetch('http://127.0.0.1:' + (process.env.PORT || 3000) + '/health')" \
+    "  .then((r) => process.exit(r.ok ? 0 : 1))" \
+    "  .catch(() => process.exit(1));" > /healthcheck.js
+
+FROM ${RUNTIME_IMAGE} AS runtime
+ARG RUNTIME_IMAGE
+ARG APP_VERSION=0.0.0-dev
+ARG GIT_SHA=unknown
+ARG SOURCE_URL=https://git.shop-sas.example/platform/shopapi
+LABEL org.opencontainers.image.title="shopapi" \
+      org.opencontainers.image.description="Shop SAS product catalogue API (distroless)" \
+      org.opencontainers.image.vendor="Shop SAS" \
+      org.opencontainers.image.version="${APP_VERSION}" \
+      org.opencontainers.image.revision="${GIT_SHA}" \
+      org.opencontainers.image.source="${SOURCE_URL}" \
+      org.opencontainers.image.base.name="${RUNTIME_IMAGE}"
+ENV NODE_ENV=production \
+    APP_VERSION=${APP_VERSION} \
+    PORT=3000
+WORKDIR /app
+COPY --from=deps-prod /app/node_modules ./node_modules
+COPY --from=healthcheck /healthcheck.js /healthcheck.js
+COPY package.json ./
+COPY src ./src
+# distroless :nonroot = uid 65532
+USER 65532:65532
+EXPOSE 3000
+HEALTHCHECK --interval=15s --timeout=3s --start-period=10s --start-interval=1s --retries=3 \
+    CMD ["/nodejs/bin/node", "/healthcheck.js"]
+# ENTRYPOINT of the base image is /nodejs/bin/node: CMD only carries the script.
+CMD ["src/server.js"]

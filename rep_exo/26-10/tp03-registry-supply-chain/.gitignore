@@ -1,0 +1,4 @@
+.tools-docker/
+.scan/
+cosign.key
+.release/

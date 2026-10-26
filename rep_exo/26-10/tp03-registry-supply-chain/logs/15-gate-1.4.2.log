@@ -1,0 +1,30 @@
+$ ./release-gate.sh shopapi:1.4.2 --push localhost:5000/shopapi:1.4.2
+
+== Metadata (shopapi:1.4.2)
+  PASS label org.opencontainers.image.version=1.4.2
+  PASS label org.opencontainers.image.revision=068ba9e
+  PASS label org.opencontainers.image.source=https://git.shop-sas.example/platform/shopapi
+  PASS non-root user (1000:1000)
+  PASS HEALTHCHECK ["CMD","wget","-q","-O","/dev/null","http://127.0.0.1:3000/health"]
+  PASS no secret in image Env
+
+== Scans (trivy, from a docker save archive)
+  PASS no fixable HIGH/CRITICAL CVE
+  PASS no secret in layers
+
+COMPLIANT shopapi:1.4.2
+
+== Release to localhost:5000/shopapi:1.4.2
+  PASS SBOM: 136 packages
+  PASS pushed localhost:5000/shopapi@sha256:4f902901f59ee8f4e8fb7c21681f070e658cb3da6c311d25b9b80ef5610e4e82
+  PASS signed
+  PASS SBOM attestation attached
+  PASS signature verified
+
+RELEASED localhost:5000/shopapi@sha256:4f902901f59ee8f4e8fb7c21681f070e658cb3da6c311d25b9b80ef5610e4e82
+exit=0
+📦 Supply Chain Security Related artifacts for an image: localhost:5000/shopapi:1.4.2
+└── 💾 Attestations for an image tag: localhost:5000/shopapi:sha256-4f902901f59ee8f4e8fb7c21681f070e658cb3da6c311d25b9b80ef5610e4e82.att
+   └── 🍒 sha256:30c0067b3d98942839dd30c0a63df78133422457330f74a253df8cdd041dc789
+└── 🔐 Signatures for an image tag: localhost:5000/shopapi:sha256-4f902901f59ee8f4e8fb7c21681f070e658cb3da6c311d25b9b80ef5610e4e82.sig
+   └── 🍒 sha256:18d91934b15baafcc4645bd2de8b0ea144f52631954fd1702753ba65f74fa436

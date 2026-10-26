@@ -1,0 +1,10 @@
+# Production reference: the image is pinned by DIGEST. The tag is kept for humans only and
+# ignored by the engine when a digest is present ("name:tag@digest").
+services:
+  shopapi:
+    image: localhost:5000/shopapi:1.4.2@sha256:4f902901f59ee8f4e8fb7c21681f070e658cb3da6c311d25b9b80ef5610e4e82
+    read_only: true
+    ports:
+      - "127.0.0.1:3002:3000"
+    environment:
+      LOG_LEVEL: info

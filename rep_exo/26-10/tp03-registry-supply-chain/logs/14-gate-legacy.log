@@ -1,0 +1,30 @@
+$ ./release-gate.sh shopapi:legacy --push localhost:5000/shopapi:legacy
+
+== Metadata (shopapi:legacy)
+  PASS label org.opencontainers.image.version=22.04
+  FAIL label org.opencontainers.image.revision missing
+  FAIL label org.opencontainers.image.source missing
+  FAIL runs as root (User='')
+  FAIL no HEALTHCHECK
+  FAIL secret in image Env: DATABASE_URL=***
+
+== Scans (trivy, from a docker save archive)
+  FAIL 22 fixable HIGH/CRITICAL CVE(s):
+         CRITICAL tar@6.2.1 -> 7.5.19 (CVE-2026-59873)
+         HIGH brace-expansion@2.0.1 -> 1.1.18, 2.1.4, 3.0.6, 5.0.9 (CVE-2026-69152)
+         HIGH brace-expansion@2.0.1 -> 5.0.10, 3.0.7, 2.1.5, 1.1.19 (CVE-2026-102276)
+         HIGH brace-expansion@2.0.1 -> 5.0.11, 3.0.8, 2.1.6, 1.1.20 (CVE-2026-102278)
+         HIGH brace-expansion@2.0.1 -> 5.0.7, 1.1.16, 2.1.2 (CVE-2026-13149)
+         HIGH brace-expansion@2.0.1 -> 5.0.8, 3.0.3, 2.1.3, 1.1.17 (CVE-2026-14257)
+         HIGH cross-spawn@7.0.3 -> 7.0.5, 6.0.6 (CVE-2024-21538)
+         HIGH glob@10.4.2 -> 11.1.0, 10.5.0 (CVE-2025-64756)
+         HIGH ip-address@9.0.5 -> 10.3.1 (CVE-2026-69192)
+         HIGH minimatch@9.0.5 -> 10.2.1, 9.0.6, 8.0.5, 7.4.7, 6.2.1, 5.1.7, 4.2.4, 3.1.3 (CVE-2026-26996)
+         ... see .release/shopapi_legacy/vulns.json
+  FAIL 3 secret(s) found:
+         CRITICAL aws-access-key-id in /app/.env
+         CRITICAL connection-string-password in /app/.env
+         CRITICAL connection-string-password in /app/Dockerfile
+
+REJECTED shopapi:legacy: 7 policy violation(s). Reports in .release/shopapi_legacy/
+exit=1
