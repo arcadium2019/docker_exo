@@ -1,0 +1,31 @@
+
+== lint
+-:39 DL3008 warning: Pin versions in apt get install. Instead of `apt-get install <package>` use `apt-get install <package>=<version>`
+-:64 DL3066 info: Non-numeric user-id may not be resolvable by host system
+Dockerfile OK
+compose (dev) OK
+compose (prod + hardened) OK
+
+== test: php -l (PHP 8.3)
+php -l OK on every file
+
+== build localhost:5002/geststock:sha-74ae4fe
+sha256:eace18b8a54781a11c9eb3cc0192abb07a309b2680b658d235882925d6941994
+
+== gate: metadata, non-root, healthcheck, trivy
+labels OK, user=www-data, healthcheck OK
+trivy: 0 fixable HIGH/CRITICAL, 0 secret
+
+== integration: ephemeral stack (prod + hardened), curl, down -v
+[2026-10-30T11:09:37+01:00] INFO geststock: rapport généré
+msmtp: cannot connect to localhost, port 25: Connection refused
+msmtp: could not send mail
+health OK, home OK, add item OK, rapport OK (6 containers healthy)
+
+== push + sign + verify
+localhost:5002/geststock:sha-74ae4fe
+Private key written to cosign.key
+Public key written to cosign.pub
+signed and verified: localhost:5002/geststock@sha256:3eb2bd9227f4b92720e5b13fd765b3a8c4e03f484532c63945c452a50f193fe6
+
+== pipeline OK: localhost:5002/geststock:sha-74ae4fe

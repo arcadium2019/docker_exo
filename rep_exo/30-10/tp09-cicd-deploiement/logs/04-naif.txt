@@ -1,0 +1,21 @@
+$ (pendant la mesure) docker compose up -d --force-recreate api   (VERSION=sha-b2c3d4e)
+ Container shop-api-2 Starting 
+ Container shop-api-2 Started 
+
+real	0m3,078s
+user	0m0,077s
+sys	0m0,038s
+$ ./deploy/measure-downtime.sh 25 100
+requests: 2400  ok: 1957  failures: 443
+       73 000
+     1957 200
+      200 404
+      170 502
+{"service":"shopapi","version":"sha-b2c3d4e"}
+### naïf avec la config Traefik finale (retry + dialTimeout 300ms)
+ Container shop-api-10 Started 
+requests: 2400  ok: 2187  failures: 213
+     2187 200
+      200 404
+        7 502
+        6 504

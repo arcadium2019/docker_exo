@@ -1,0 +1,47 @@
+### essai 1 : db en cap_drop ALL sans cap_add (socket-proxy v0.4.2)
+ Container shop-db-1 Error dependency db failed to start
+ Container shop-db-1 Error dependency db failed to start
+dependency failed to start: container shop-db-1 is unhealthy
+shop-api-1 Created
+shop-db-1 Restarting (1) Less than a second ago
+shop-redis-1 Up 1 second (healthy)
+shop-socket-proxy-1 Up 1 second
+shop-traefik-1 Up 1 second (healthy)
+shop-worker-1 Created
+--- logs db
+db-1  | find: /var/lib/postgresql/data: Permission denied
+db-1  | chmod: /var/lib/postgresql/data: Operation not permitted
+db-1  | find: /var/lib/postgresql/data: Permission denied
+db-1  | chmod: /var/lib/postgresql/data: Operation not permitted
+db-1  | find: /var/lib/postgresql/data: Permission denied
+--- logs socket-proxy
+socket-proxy-1  | ::ffff:172.30.0.3:53850 [30/Oct/2026:09:46:41.366] dockerfrontend dockerbackend/dockersocket 0/0/0/0/0 200 8237 - - ---- 2/2/0/0/0 0/0 "GET /v1.54/containers/e847f3326ab8734003cecb6e9aeb2d1d872b41f935f21c2a04638da0a58cd8c4/json HTTP/1.1"
+socket-proxy-1  | ::ffff:172.30.0.3:53850 [30/Oct/2026:09:46:41.366] dockerfrontend dockerbackend/dockersocket 0/0/0/0/0 200 7523 - - ---- 2/2/0/0/0 0/0 "GET /v1.54/containers/c342bc19a01bbe459502cf3bb50d96bc8ea94fdd80656082e8b26ea80f4e8f2b/json HTTP/1.1"
+socket-proxy-1  | ::ffff:172.30.0.3:53850 [30/Oct/2026:09:46:41.366] dockerfrontend dockerbackend/dockersocket 0/0/0/0/0 200 8452 - - ---- 2/2/0/0/0 0/0 "GET /v1.54/containers/30b25b4cddc8ef6ec2aeb4e8874709b0c0165b3e676cfeee9c9479883e67b86f/json HTTP/1.1"
+--- logs redis
+redis-1  | 1:M 30 Oct 2026 09:46:39.945 * Opening AOF incr file appendonly.aof.1.incr.aof on server start
+redis-1  | 1:M 30 Oct 2026 09:46:39.945 * Ready to accept connections tcp
+--- logs traefik
+### essai 2 : db cap_add [DAC_OVERRIDE, FOWNER]
+container shop-db-1 is unhealthy
+shop-db-1 Restarting (1) Less than a second ago
+db-1  | chown: /var/run/postgresql: Operation not permitted
+db-1  | chown: /var/run/postgresql: Operation not permitted
+db-1  | chown: /var/run/postgresql: Operation not permitted
+### essai 3 : db cap_add [DAC_OVERRIDE, FOWNER, CHOWN]
+container shop-db-1 is unhealthy
+shop-db-1 Restarting (1) Less than a second ago
+db-1  | error: failed switching to "postgres": operation not permitted
+db-1  | error: failed switching to "postgres": operation not permitted
+db-1  | error: failed switching to "postgres": operation not permitted
+### essai 4 : db cap_add [DAC_OVERRIDE, FOWNER, CHOWN, SETUID, SETGID]
+ Container shop-db-1 Healthy 
+shop-db-1 Up 1 second (healthy)
+db-1  | 2026-10-30 09:47:03.318 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+db-1  | 2026-10-30 09:47:03.321 UTC [30] LOG:  database system was shut down at 2026-10-30 09:46:20 UTC
+db-1  | 2026-10-30 09:47:03.325 UTC [1] LOG:  database system is ready to accept connections
+### essai 5 : db user 70:70, aucune capability
+ Container shop-db-1 Healthy 
+shop-db-1 Up 1 second (healthy)
+db-1  | 2026-10-30 09:47:19.544 UTC [16] LOG:  database system was shut down at 2026-10-30 09:47:19 UTC
+db-1  | 2026-10-30 09:47:19.549 UTC [1] LOG:  database system is ready to accept connections

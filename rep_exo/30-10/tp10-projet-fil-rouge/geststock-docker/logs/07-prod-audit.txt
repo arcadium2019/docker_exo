@@ -1,0 +1,20 @@
+$ docker compose -f compose.yml -f compose.prod.yml -f compose.hardened.yml up -d --wait   (prod + hardened, sha-74ae4fe)
+ Container geststock-app-2 Healthy 
+NAME                       IMAGE                                  STATUS
+geststock-app-1            localhost:5002/geststock:sha-74ae4fe   Up 2 seconds (healthy)
+geststock-app-2            localhost:5002/geststock:sha-74ae4fe   Up 1 second (healthy)
+geststock-cron-1           localhost:5002/geststock:sha-74ae4fe   Up 1 second (healthy)
+geststock-db-1             mariadb:11.4.13                        Up 4 seconds (healthy)
+geststock-socket-proxy-1   tecnativa/docker-socket-proxy:v0.4.2   Up 4 seconds
+geststock-traefik-1        traefik:v3.6                           Up 4 seconds (healthy)
+<h1>GestStock — inventaire (250 articles)</h1>
+$ AUDIT_SOCKET_OK=geststock-socket-proxy-1 ./scripts/audit.sh geststock
+CONTAINER                  USER     PRIV  CAP_ADD        CAP_DROP     RO  MEMORY    PIDS   NNP  SOCKET DEVIATIONS
+geststock-app-1            www-data false -              ALL          y   256M      200    y    no     OK
+geststock-app-2            www-data false -              ALL          y   256M      200    y    no     OK
+geststock-cron-1           www-data false -              ALL          y   128M      100    y    no     OK
+geststock-traefik-1        65534:65534 false -              ALL          y   128M      200    y    no     OK
+geststock-db-1             999:999  false -              ALL          y   512M      200    y    no     OK
+geststock-socket-proxy-1   65534:975 false -              ALL          y   64M       100    y    YES    OK
+total deviations: 0
+exit=0

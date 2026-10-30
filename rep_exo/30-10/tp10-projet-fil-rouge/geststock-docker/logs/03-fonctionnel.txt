@@ -1,0 +1,28 @@
+$ curl geststock.localhost/?health
+OK
+$ curl geststock.localhost/
+<h1>GestStock — inventaire (4 articles)</h1>
+PHP 8.3.35
+$ POST article + photo
+200
+<h1>GestStock — inventaire (5 articles)</h1>
+photo: /uploads/p_6ae46c26415cb2.46936372.png -> 200 image/png
+$ .php déposé dans uploads
+GET /uploads/evil.php -> 403
+$ display_errors : base coupée -> page d erreur ?
+DB KO
+HTTP 503
+no available server
+
+$ rapport à la demande
+[2026-10-30T11:06:41+01:00] INFO geststock: rapport généré
+Articles: 5, quantité totale: 520
+Stock bas:
+ - Batterie externe: 2
+ - Câble HDMI 2m: 3
+ - Clé USB 64Go: 3
+$ Mailpit
+2026-10-30T10:06:42.004Z to=direction@shop.example subject=Rapport stock 2026-10-30
+2026-10-30T10:06:01.499Z to=direction@shop.example subject=Rapport stock 2026-10-30
+$ logs applicatifs sur stderr
+app-1   | [2026-10-30T11:06:30+01:00] INFO geststock: article ajouté: Clé USB 64Go (3)

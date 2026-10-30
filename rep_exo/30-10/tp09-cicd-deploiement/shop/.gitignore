@@ -1,0 +1,6 @@
+secrets/*.txt
+.env
+backups/
+.scan/
+.release/
+ci/out/

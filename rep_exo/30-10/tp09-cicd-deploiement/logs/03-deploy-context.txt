@@ -1,0 +1,17 @@
+$ docker context create shop-preprod --docker "host=unix:///var/run/docker.sock"   (simule ssh://deploy@preprod.local)
+shop-preprod
+Successfully created context "shop-preprod"
+$ docker --context shop-preprod ps --format {{.Names}}
+ci-registry
+backend-postgres-1
+$ DOCKER_CONTEXT=shop-preprod docker compose -f compose.yml -f compose.prod.yml up -d --wait
+ Container shop-api-2 Healthy 
+ Container shop-worker-1 Healthy 
+NAME             IMAGE                                    STATUS
+shop-api-1       localhost:5002/shopapi:sha-74ae4fe       Up 2 seconds (healthy)
+shop-api-2       localhost:5002/shopapi:sha-74ae4fe       Up 2 seconds (healthy)
+shop-db-1        postgres:16.4-alpine                     Up 4 seconds (healthy)
+shop-redis-1     redis:7.4-alpine                         Up 4 seconds (healthy)
+shop-traefik-1   traefik:v3.6                             Up 4 seconds (healthy)
+shop-worker-1    localhost:5002/shop-worker:sha-74ae4fe   Up 2 seconds (healthy)
+{"service":"shopapi","version":"sha-74ae4fe"}

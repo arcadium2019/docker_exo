@@ -1,0 +1,10 @@
+$ ./audit.sh shop   (stack TP04, compose.yml + compose.prod.yml)
+CONTAINER                  USER     PRIV  CAP_ADD        CAP_DROP     RO  MEMORY    PIDS   NNP  SOCKET DEVIATIONS
+shop-api-1                 1000:1000 false -              ALL          y   256M      none   y    no     no-pids-limit
+shop-api-2                 1000:1000 false -              ALL          y   256M      none   y    no     no-pids-limit
+shop-traefik-1             root     false -              -            n   128M      none   n    YES    root,no-cap-drop-all,rootfs-rw,no-pids-limit,no-nnp,docker-socket
+shop-worker-1              10001:10001 false -              ALL          y   128M      none   y    no     no-pids-limit
+shop-redis-1               root     false -              -            n   128M      none   n    no     root,no-cap-drop-all,rootfs-rw,no-pids-limit,no-nnp
+shop-db-1                  root     false -              -            n   512M      none   n    no     root,no-cap-drop-all,rootfs-rw,no-pids-limit,no-nnp
+total deviations: 19
+exit=1

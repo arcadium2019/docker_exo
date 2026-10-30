@@ -1,0 +1,1 @@
+actionlint exit=0 (aucune erreur sur .github/workflows/ci.yml)

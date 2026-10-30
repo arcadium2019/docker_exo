@@ -1,0 +1,83 @@
+# Hardening overlay of the TP04 stack. Each directive says which threat it reduces.
+#   cd ../../29-10/tp04-compose-entreprise
+#   docker compose -f compose.yml -f ../../30-10/tp08-hardening/compose.hardened.yml up -d --wait
+x-hardening: &hardening
+  read_only: true                          # an attacker cannot drop/modify binaries or persist in the image layer
+  cap_drop: [ALL]                          # a root compromise inside the container loses kernel privileges (mount, raw net, chown...)
+  security_opt: [no-new-privileges:true]   # setuid binaries (su, sudo...) can no longer raise privileges
+  pids_limit: 200                          # a fork bomb stays inside its cgroup instead of exhausting the host PID table
+
+services:
+  # --- Docker API seen by Traefik: read-only subset, never the raw socket.
+  socket-proxy:
+    <<: *hardening
+    image: tecnativa/docker-socket-proxy:v0.4.2
+    # nobody + the host "docker" group (gid of /var/run/docker.sock, host specific: getent group docker).
+    user: "65534:${DOCKER_GID:-975}"
+    environment:
+      CONTAINERS: 1                        # GET /containers (discovery)
+      NETWORKS: 1                          # GET /networks
+      EVENTS: 1
+      VERSION: 1
+      POST: 0                              # no write call at all: cannot create/exec/start a container
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    tmpfs:
+      - /run:uid=65534,mode=0755          # haproxy pidfile
+      - /tmp
+    networks: [socket]
+    mem_limit: 64m
+    cpus: 0.25
+    restart: unless-stopped
+
+  traefik:
+    <<: *hardening
+    user: "65534:65534"                    # nobody: Docker sets ip_unprivileged_port_start=0, port 80 needs no capability
+    command:
+      - --providers.docker=true
+      - --providers.docker.endpoint=tcp://socket-proxy:2375
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.network=shop_front
+      - --entrypoints.web.address=:80
+      - --ping=true
+      - --accesslog=true
+    volumes: !reset []                     # the Docker socket is gone (it was root on the host)
+    networks: [front, socket]
+    depends_on:
+      socket-proxy: { condition: service_started }
+    mem_limit: 128m
+    cpus: 0.5
+
+  api:
+    <<: *hardening
+    tmpfs: [/tmp]
+    mem_limit: 256m
+    cpus: 0.5
+
+  worker:
+    <<: *hardening
+    tmpfs: [/tmp]
+    mem_limit: 128m
+    cpus: 0.25
+
+  db:
+    <<: *hardening
+    # As root, the entrypoint needs CHOWN, DAC_OVERRIDE, FOWNER (fix PGDATA owner/mode) and SETUID, SETGID
+    # (gosu to postgres), found by trial and error. Starting directly as postgres (uid 70, owner of
+    # the volume) skips all of that: no capability at all.
+    user: "70:70"
+    tmpfs:
+      - /var/run/postgresql:uid=70,gid=70,mode=0775
+      - /tmp
+    mem_limit: 512m
+    cpus: 1.0
+
+  redis:
+    <<: *hardening
+    user: "999:1000"                       # redis user of the image: no root, no capability needed
+    mem_limit: 128m
+    cpus: 0.25
+
+networks:
+  socket:
+    internal: true                         # the proxy is reachable by Traefik only, never from outside

@@ -1,0 +1,162 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hadolint/hadolint-action@v3.1.0
+        with: { dockerfile: apps/shopapi/Dockerfile, failure-threshold: error }
+      - uses: hadolint/hadolint-action@v3.1.0
+        with: { dockerfile: apps/shop-worker/Dockerfile, failure-threshold: error }
+      - name: compose config
+        run: |
+          mkdir -p secrets && echo dummy > secrets/db_password.txt
+          docker compose -f compose.yml config -q
+          REGISTRY=x VERSION=y docker compose -f compose.yml -f compose.prod.yml config -q
+
+  build:
+    needs: lint
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write   # push to GHCR
+      id-token: write   # OIDC token for keyless cosign
+    strategy:
+      matrix:
+        app: [shopapi, shop-worker]
+    outputs:
+      digest-shopapi: ${{ steps.out.outputs.digest-shopapi }}
+      digest-shop-worker: ${{ steps.out.outputs.digest-shop-worker }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_PREFIX }}/${{ matrix.app }}
+          tags: |
+            type=sha,prefix=sha-
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=ref,event=pr
+
+      - name: test stage
+        uses: docker/build-push-action@v6
+        with:
+          context: apps/${{ matrix.app }}
+          target: test
+          cache-from: type=gha,scope=${{ matrix.app }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.app }}
+          secrets: |
+            pipconf=${{ secrets.PIP_CONF }}
+
+      - name: login GHCR
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: build
+        name: build (push on main/tags)
+        uses: docker/build-push-action@v6
+        with:
+          context: apps/${{ matrix.app }}
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            APP_VERSION=${{ steps.meta.outputs.version }}
+            VERSION=${{ steps.meta.outputs.version }}
+            GIT_SHA=${{ github.sha }}
+            SOURCE_URL=${{ github.server_url }}/${{ github.repository }}
+          secrets: |
+            pipconf=${{ secrets.PIP_CONF }}
+          cache-from: type=gha,scope=${{ matrix.app }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.app }}
+          provenance: mode=max
+          sbom: true
+
+      - name: trivy gate (blocking)
+        if: github.event_name != 'pull_request'
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ${{ env.IMAGE_PREFIX }}/${{ matrix.app }}@${{ steps.build.outputs.digest }}
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+
+      - uses: sigstore/cosign-installer@v3
+        if: github.event_name != 'pull_request'
+      - name: sign (keyless, OIDC)
+        if: github.event_name != 'pull_request'
+        run: cosign sign --yes "${IMAGE_PREFIX}/${{ matrix.app }}@${{ steps.build.outputs.digest }}"
+
+      - id: out
+        run: echo "digest-${{ matrix.app }}=${{ steps.build.outputs.digest }}" >> "$GITHUB_OUTPUT"
+
+  deploy-preprod:
+    if: github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    environment: preprod
+    steps:
+      - uses: actions/checkout@v4
+      - uses: sigstore/cosign-installer@v3
+      - name: verify signatures
+        run: |
+          for app in shopapi shop-worker; do
+            cosign verify "${IMAGE_PREFIX}/$app:sha-${GITHUB_SHA::7}" \
+              --certificate-identity-regexp "^${{ github.server_url }}/${{ github.repository }}/" \
+              --certificate-oidc-issuer https://token.actions.githubusercontent.com
+          done
+      - name: rolling update on preprod (docker context over SSH)
+        env:
+          SSH_KEY: ${{ secrets.PREPROD_SSH_KEY }}
+          PREPROD_HOST: ${{ vars.PREPROD_HOST }}
+        run: |
+          install -m 600 /dev/null ~/.ssh_key && echo "$SSH_KEY" > ~/.ssh_key
+          export DOCKER_HOST="ssh://deploy@${PREPROD_HOST}" GIT_SSH_COMMAND="ssh -i ~/.ssh_key"
+          REGISTRY="$IMAGE_PREFIX" VERSION="sha-${GITHUB_SHA::7}" VERIFY=0 ./deploy/rolling-update.sh
+
+  deploy-prod:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    environment: prod   # protected environment: manual approval by a reviewer
+    steps:
+      - uses: actions/checkout@v4
+      - uses: sigstore/cosign-installer@v3
+      - name: verify signatures
+        run: |
+          for app in shopapi shop-worker; do
+            cosign verify "${IMAGE_PREFIX}/$app:${GITHUB_REF_NAME#v}" \
+              --certificate-identity-regexp "^${{ github.server_url }}/${{ github.repository }}/" \
+              --certificate-oidc-issuer https://token.actions.githubusercontent.com
+          done
+      - name: rolling update on prod
+        env:
+          SSH_KEY: ${{ secrets.PROD_SSH_KEY }}
+          PROD_HOST: ${{ vars.PROD_HOST }}
+        run: |
+          install -m 600 /dev/null ~/.ssh_key && echo "$SSH_KEY" > ~/.ssh_key
+          export DOCKER_HOST="ssh://deploy@${PROD_HOST}"
+          REGISTRY="$IMAGE_PREFIX" VERSION="${GITHUB_REF_NAME#v}" VERIFY=0 ./deploy/rolling-update.sh

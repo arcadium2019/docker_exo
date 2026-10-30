@@ -1,0 +1,17 @@
+### rollback sha-c3d4e5f -> sha-74ae4fe (retry 5)
+$ time VERSION=sha-74ae4fe ./scripts/rolling-update.sh
+== target image: localhost:5002/geststock:sha-74ae4fe
+== signature verified
+-- replacing geststock-app-3
+-- replacing geststock-app-4
+== done in 24 s
+geststock-app-5 localhost:5002/geststock:sha-74ae4fe Up 23 seconds (healthy)
+geststock-app-6 localhost:5002/geststock:sha-74ae4fe Up 17 seconds (healthy)
+geststock-cron-1 localhost:5002/geststock:sha-74ae4fe Up 1 second (healthy)
+
+real	0m28,154s
+user	0m0,723s
+sys	0m0,399s
+requests: 3800  ok: 3772  failures: 28
+       28 000
+     3772 200

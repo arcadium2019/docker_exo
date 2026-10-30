@@ -1,0 +1,22 @@
+### rollback sha-b2c3d4e -> sha-74ae4fe
+$ time VERSION=sha-74ae4fe ./deploy/rolling-update.sh
+== target image: localhost:5002/shopapi:sha-74ae4fe
+== signature verified
+-- replacing shop-api-7
+-- replacing shop-api-8
+== done in 22 s
+shop-api-10 localhost:5002/shopapi:sha-74ae4fe Up 14 seconds (healthy)
+shop-api-9 localhost:5002/shopapi:sha-74ae4fe Up 22 seconds (healthy)
+
+real	0m23,695s
+user	0m0,619s
+sys	0m0,286s
+requests: 4300  ok: 4300  failures: 0
+     4300 200
+{"service":"shopapi","version":"sha-74ae4fe"}
+### image non signée : refus
+localhost:5002/shopapi:unsigned
+$ VERSION=unsigned ./deploy/rolling-update.sh
+== target image: localhost:5002/shopapi:unsigned
+signature verification FAILED for localhost:5002/shopapi:unsigned: abort
+exit=1

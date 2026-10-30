@@ -1,0 +1,13 @@
+# Plugs GestStock into the TP07 observability stack (logs: Promtail already reads every container
+# through the socket; metrics: cAdvisor + supercronic). Run from this directory:
+#   docker compose -f ../../../../29-10/tp07-observabilite/compose.observability.yml -f compose.geststock.yml up -d --wait
+services:
+  prometheus:
+    volumes: !override
+      # relative to the FIRST compose file (tp07 directory)
+      - ../../30-10/tp10-projet-fil-rouge/geststock-docker/observability/prometheus:/etc/prometheus:ro
+      - promdata:/prometheus
+    networks: !override [default, geststock_back]
+
+networks:
+  geststock_back: { external: true }

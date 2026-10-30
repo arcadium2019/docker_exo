@@ -1,0 +1,36 @@
+
+== lint: hadolint
+Unable to find image 'hadolint/hadolint:v2.15.1' locally
+v2.15.1: Pulling from hadolint/hadolint
+Digest: sha256:32dac94127fd60b7b7e3fbfc65e1383b9b5e25c9bfd7b8536de7a539fe68a12d
+Status: Downloaded newer image for hadolint/hadolint:v2.15.1
+apps/shopapi/Dockerfile OK
+apps/shop-worker/Dockerfile OK
+
+== lint: docker compose config
+compose.yml OK
+compose.prod.yml OK
+
+== test stage
+shopapi tests OK
+shop-worker tests OK
+
+== build sha-74ae4fe
+sha256:953c175c8ab65cb0135b99812aa60dd4335b096aab6923c4ed0dc9fc558126c8
+sha256:653799931edd51194155181f2104945b1c7184219989a953cb2852488b4ddccd
+
+== gate: trivy (HIGH/CRITICAL fixable = fail)
+shopapi: 0 fixable HIGH/CRITICAL -> pass
+shop-worker: 0 fixable HIGH/CRITICAL -> pass
+
+== push to localhost:5002
+localhost:5002/shopapi:sha-74ae4fe
+localhost:5002/shop-worker:sha-74ae4fe
+
+== sign + verify (cosign, by digest)
+Private key written to cosign.key
+Public key written to cosign.pub
+verified: shopapi@sha256:cba22caadbf154cf7f8703a634245e04b7aef26a6893739f3030d379e72fc4a9
+verified: shop-worker@sha256:3e32153415b5885f8d2e1c9452dc2644a78ac3639ff65e1514b5bc4dff49bc4f
+
+== main pipeline OK: localhost:5002/{shopapi,shop-worker}:sha-74ae4fe

@@ -1,0 +1,8 @@
+$ (depuis le réseau shop_socket) GET /containers/json
+  HTTP/1.1 200 OK
+$ POST /containers/create (créer un conteneur privilégié)
+  HTTP/1.0 403 Forbidden
+$ GET /images/json (non autorisé : IMAGES=0)
+  HTTP/1.0 403 Forbidden
+$ depuis l hôte (port non publié)
+2375 fermé

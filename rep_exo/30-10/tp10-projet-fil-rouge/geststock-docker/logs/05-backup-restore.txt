@@ -1,0 +1,29 @@
+$ ./scripts/checksum.sh   (avant)
+items=250 md5=299ec4c4c6d43326a03e265acf3a21db
+uploads=4 md5=cba541659095625482f76b5213b31ded
+$ ./scripts/backup.sh
+backup 20261030-110733: 4,0K db, 4,0K uploads
+$ docker compose down -v
+ Volume geststock_uploads Removing 
+ Volume geststock_dbdata Removing 
+ Volume geststock_uploads Removed 
+ Volume geststock_dbdata Removed 
+$ docker compose up -d --wait   (volumes neufs)
+ Container geststock-app-1 Healthy 
+items=4 md5=e724339ab8626bdad6de47241096421c
+uploads=0 md5=d41d8cd98f00b204e9800998ecf8427e
+$ ./scripts/restore.sh
+== restore 20261030-110733
+ Container geststock-db-1 Running 
+ Container geststock-app-1 Running 
+ Container geststock-db-1 Waiting 
+ Container geststock-db-1 Healthy 
+ Container geststock-db-1 Waiting 
+ Container geststock-app-1 Waiting 
+ Container geststock-db-1 Healthy 
+ Container geststock-app-1 Healthy 
+== restored
+$ ./scripts/checksum.sh   (après)
+items=250 md5=299ec4c4c6d43326a03e265acf3a21db
+uploads=4 md5=cba541659095625482f76b5213b31ded
+photo legacy -> 200

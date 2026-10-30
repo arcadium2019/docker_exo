@@ -1,0 +1,18 @@
+global:
+  scrape_interval: 10s
+  evaluation_interval: 10s
+
+rule_files:
+  - /etc/prometheus/alerts.yml
+
+scrape_configs:
+  - job_name: cadvisor
+    static_configs:
+      - targets: ["cadvisor:8080"]
+
+  # supercronic metrics (job runs, failures) of the GestStock cron container
+  - job_name: geststock-cron
+    dns_sd_configs:
+      - names: ["cron"]
+        type: A
+        port: 9746

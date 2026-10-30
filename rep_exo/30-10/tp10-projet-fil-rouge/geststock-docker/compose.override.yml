@@ -1,0 +1,22 @@
+# Dev only (applied automatically): Mailpit catches every mail, code bind-mounted.
+services:
+  mailpit:
+    image: axllent/mailpit:v1.32.0
+    networks: [front, back]
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.mail.rule: Host(`mail.localhost`)
+      traefik.http.routers.mail.entrypoints: web
+      traefik.http.services.mail.loadbalancer.server.port: "8025"
+
+  app:
+    environment:
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
+    volumes:
+      - ./app:/var/www/geststock:ro
+
+  cron:
+    environment:
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025

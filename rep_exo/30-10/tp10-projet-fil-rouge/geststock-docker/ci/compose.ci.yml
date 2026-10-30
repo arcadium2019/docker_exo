@@ -1,0 +1,4 @@
+# CI integration test: no host port (the job may run next to another stack), checked from inside.
+services:
+  traefik:
+    ports: !reset []

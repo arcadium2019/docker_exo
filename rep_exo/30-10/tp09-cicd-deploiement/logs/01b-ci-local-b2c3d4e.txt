@@ -1,0 +1,12 @@
+== lint: hadolint
+== lint: docker compose config
+== test stage
+== build sha-b2c3d4e
+== gate: trivy (HIGH/CRITICAL fixable = fail)
+shopapi: 0 fixable HIGH/CRITICAL -> pass
+shop-worker: 0 fixable HIGH/CRITICAL -> pass
+== push to localhost:5002
+== sign + verify (cosign, by digest)
+verified: shopapi@sha256:4c8a56739e59f9c279aa3081ddac402d5d87a321a4c37595dc2f347f099b7c36
+verified: shop-worker@sha256:82403a2bab60011d1f501e4948fe79911179419c473d1aa469feb17c5921c425
+== main pipeline OK: localhost:5002/{shopapi,shop-worker}:sha-b2c3d4e

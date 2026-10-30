@@ -1,0 +1,15 @@
+== lint
+Dockerfile OK
+compose (dev) OK
+compose (prod + hardened) OK
+== test: php -l (PHP 8.3)
+php -l OK on every file
+== build localhost:5002/geststock:sha-c3d4e5f
+== gate: metadata, non-root, healthcheck, trivy
+labels OK, user=33:33, healthcheck OK
+trivy: 0 fixable HIGH/CRITICAL, 0 secret
+== integration: ephemeral stack (prod + hardened), curl, down -v
+health OK, home OK, add item OK, rapport OK (6 containers healthy)
+== push + sign + verify
+signed and verified: localhost:5002/geststock@sha256:a179c5c154090763cd09b116b4b6958634afaa1713e17dc1b6990802ba1e6145
+== pipeline OK: localhost:5002/geststock:sha-c3d4e5f

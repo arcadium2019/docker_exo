@@ -1,0 +1,35 @@
+# Hardening overlay (TP08): read-only rootfs, no capability, no privilege escalation, limits.
+# Limits are in deploy.resources (pids_limit/mem_limit cannot be mixed with compose.prod.yml's deploy.resources).
+x-hardening: &hardening
+  read_only: true                          # no binary dropped or modified, nothing persisted outside volumes
+  cap_drop: [ALL]                          # every service runs as a non-root user: no capability needed
+  security_opt: [no-new-privileges:true]   # setuid binaries cannot raise privileges
+
+services:
+  socket-proxy:
+    <<: *hardening
+    deploy: { resources: { limits: { memory: 64M, pids: 100 } } }
+
+  traefik:
+    <<: *hardening
+    deploy: { resources: { limits: { memory: 128M, pids: 200 } } }   # fork bombs stay in their cgroup
+
+  app:
+    <<: *hardening
+    tmpfs:
+      - /tmp                                         # PHP upload temp files
+      - /var/run/apache2:uid=33,gid=33,mode=0755     # Apache pid file
+      - /var/lock/apache2:uid=33,gid=33,mode=0755
+    deploy: { resources: { limits: { memory: 256M, pids: 200 } } }
+
+  cron:
+    <<: *hardening
+    tmpfs: [/tmp]
+    deploy: { resources: { limits: { memory: 128M, pids: 100 } } }
+
+  db:
+    <<: *hardening
+    tmpfs:
+      - /tmp
+      - /run/mysqld:uid=999,gid=999,mode=0755        # socket + pid
+    deploy: { resources: { limits: { memory: 512M, pids: 200 } } }

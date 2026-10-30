@@ -1,0 +1,2 @@
+# Daily stock report (legacy: /etc/cron.d/geststock, 6 am). Run by supercronic, output to stdout.
+0 6 * * * php /var/www/geststock/bin/rapport.php

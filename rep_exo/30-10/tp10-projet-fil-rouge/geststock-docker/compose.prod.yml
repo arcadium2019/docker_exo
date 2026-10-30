@@ -1,0 +1,33 @@
+# Prod: signed image from the registry, 2 replicas, real SMTP relay, resource limits.
+services:
+  app:
+    build: !reset null
+    image: ${REGISTRY:?REGISTRY must be set}/geststock:${VERSION:?VERSION must be set}
+    pull_policy: missing
+    environment:
+      SMTP_HOST: ${SMTP_HOST:?SMTP_HOST must be set}
+    deploy:
+      replicas: 2
+      resources:
+        limits: { cpus: "1.0", memory: 256M }
+
+  cron:
+    build: !reset null
+    image: ${REGISTRY:?REGISTRY must be set}/geststock:${VERSION:?VERSION must be set}
+    pull_policy: missing
+    environment:
+      SMTP_HOST: ${SMTP_HOST:?SMTP_HOST must be set}
+    networks: [back, front]   # front: egress to the company SMTP relay (back is internal)
+    deploy:
+      resources:
+        limits: { cpus: "0.25", memory: 128M }
+
+  db:
+    deploy:
+      resources:
+        limits: { cpus: "1.0", memory: 512M }
+
+  traefik:
+    deploy:
+      resources:
+        limits: { cpus: "0.5", memory: 128M }

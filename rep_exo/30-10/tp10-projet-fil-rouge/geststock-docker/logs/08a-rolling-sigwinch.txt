@@ -1,0 +1,13 @@
+### rolling sha-74ae4fe -> sha-c3d4e5f (stop SIGTERM, retry 5, dialTimeout 300ms)
+== target image: localhost:5002/geststock:sha-c3d4e5f
+== signature verified
+-- replacing geststock-app-5
+-- replacing geststock-app-6
+== done in 23 s
+geststock-app-7 localhost:5002/geststock:sha-c3d4e5f Up 23 seconds (healthy)
+geststock-app-8 localhost:5002/geststock:sha-c3d4e5f Up 17 seconds (healthy)
+geststock-cron-1 localhost:5002/geststock:sha-c3d4e5f Up 1 second (healthy)
+requests: 3800  ok: 3798  failures: 2
+        1 000
+     3798 200
+        1 502

@@ -1,0 +1,11 @@
+$ docker compose up -d --build --wait   (dev)
+ Container geststock-db-1 Healthy 
+ Container geststock-app-1 Healthy 
+ Container geststock-cron-1 Healthy 
+NAME                       IMAGE                                  STATUS
+geststock-app-1            geststock:dev                          Up 1 second (healthy)
+geststock-cron-1           geststock:dev                          Up 1 second (healthy)
+geststock-db-1             mariadb:11.4.13                        Up 6 seconds (healthy)
+geststock-mailpit-1        axllent/mailpit:v1.32.0                Up 6 seconds (healthy)
+geststock-socket-proxy-1   tecnativa/docker-socket-proxy:v0.4.2   Up 6 seconds
+geststock-traefik-1        traefik:v3.6                           Up 6 seconds (healthy)

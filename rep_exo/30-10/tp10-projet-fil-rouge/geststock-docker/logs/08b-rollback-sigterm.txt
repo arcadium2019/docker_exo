@@ -1,0 +1,17 @@
+### rollback -> sha-74ae4fe (stop SIGTERM)
+$ time VERSION=sha-74ae4fe ./scripts/rolling-update.sh
+== target image: localhost:5002/geststock:sha-74ae4fe
+== signature verified
+-- replacing geststock-app-7
+-- replacing geststock-app-8
+== done in 22 s
+geststock-app-10 localhost:5002/geststock:sha-74ae4fe Up 16 seconds (healthy)
+geststock-app-9 localhost:5002/geststock:sha-74ae4fe Up 21 seconds (healthy)
+geststock-cron-1 localhost:5002/geststock:sha-74ae4fe Up 1 second (healthy)
+
+real	0m22,823s
+user	0m0,714s
+sys	0m0,351s
+requests: 3800  ok: 3799  failures: 1
+        1 000
+     3799 200

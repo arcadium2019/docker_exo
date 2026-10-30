@@ -1,0 +1,11 @@
+### rolling update sha-74ae4fe -> sha-b2c3d4e (dialTimeout 300ms + retry)
+== target image: localhost:5002/shopapi:sha-b2c3d4e
+== signature verified
+-- replacing shop-api-5
+-- replacing shop-api-6
+== done in 21 s
+shop-api-7 localhost:5002/shopapi:sha-b2c3d4e Up 20 seconds (healthy)
+shop-api-8 localhost:5002/shopapi:sha-b2c3d4e Up 6 seconds (healthy)
+requests: 4300  ok: 4300  failures: 0
+     4300 200
+{"service":"shopapi","version":"sha-b2c3d4e"}

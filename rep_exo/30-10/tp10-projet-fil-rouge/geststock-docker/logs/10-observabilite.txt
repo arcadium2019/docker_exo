@@ -1,0 +1,23 @@
+$ docker compose -f …/tp07/compose.observability.yml -f compose.geststock.yml up -d --wait
+ Container observability-grafana-1 Healthy 
+--- Prometheus targets
+cadvisor	cadvisor:8080	up
+geststock-cron	172.31.0.3:9746	up
+--- cAdvisor : mémoire des conteneurs geststock
+geststock-db-1 84.9 MiB
+geststock-cron-1 9.3 MiB
+geststock-app-11 20.2 MiB
+geststock-app-12 20.1 MiB
+geststock-socket-proxy-1 16 MiB
+geststock-traefik-1 22.1 MiB
+--- supercronic
+--- Loki {project="geststock"} : services
+app, cron, db, socket-proxy, traefik
+--- Loki {project="geststock"} |= "geststock:"
+$ docker compose run --rm cron php /var/www/geststock/bin/rapport.php
+ - Article legacy 031 — réf. 9056: 4
+ - Article legacy 036 — réf. 5523: 4
+ - Article legacy 102 — réf. 7059: 4
+--- Loki {project="geststock"} |= "geststock:"
+app: [2026-10-30T11:19:44+01:00] INFO geststock: article ajouté: Écran 24 (obs) (1)
+--- métriques supercronic exposées par cron:9746

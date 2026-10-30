@@ -1,0 +1,138 @@
+# GestStock - base stack.
+# dev:  docker compose up -d --wait                                   (+ compose.override.yml)
+# prod: docker compose -f compose.yml -f compose.prod.yml -f compose.hardened.yml up -d --wait
+name: geststock
+
+x-healthcheck: &healthcheck
+  interval: 10s
+  timeout: 3s
+  retries: 5
+  start_period: 30s
+  start_interval: 1s
+
+x-logging: &logging
+  driver: json-file
+  options: { max-size: "10m", max-file: "3" }
+
+x-app-env: &app-env
+  DB_HOST: db
+  DB_NAME: geststock
+  DB_USER: geststock
+  DB_PASS_FILE: /run/secrets/db_password
+  UPLOAD_DIR: /var/www/html/uploads
+  SMTP_HOST: ${SMTP_HOST:-localhost}
+  SMTP_PORT: ${SMTP_PORT:-25}
+  REPORT_TO: ${REPORT_TO:-direction@shop.example}
+
+services:
+  # Docker API for Traefik: GET only, on an internal network (TP08). Traefik never sees the socket.
+  socket-proxy:
+    image: tecnativa/docker-socket-proxy:v0.4.2
+    user: "65534:${DOCKER_GID:-975}"
+    environment: { CONTAINERS: 1, NETWORKS: 1, EVENTS: 1, VERSION: 1, POST: 0 }
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    tmpfs: ["/run:uid=65534,mode=0755", /tmp]
+    networks: [socket]
+    restart: unless-stopped
+    logging: *logging
+
+  traefik:
+    image: traefik:v3.6
+    user: "65534:65534"
+    command:
+      - --providers.docker=true
+      - --providers.docker.endpoint=tcp://socket-proxy:2375
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.network=geststock_front
+      - --entrypoints.web.address=:80
+      - --serverstransport.forwardingtimeouts.dialtimeout=300ms
+      - --ping=true
+      - --accesslog=true
+    ports: ["80:80"]
+    networks: [front, socket]
+    depends_on: [socket-proxy]
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+    restart: unless-stopped
+    logging: *logging
+
+  app:
+    build: .
+    image: geststock:${VERSION:-dev}
+    environment: *app-env
+    secrets: [db_password]
+    volumes:
+      - uploads:/var/www/html/uploads
+    networks: [front, back]
+    depends_on:
+      db: { condition: service_healthy }
+    stop_grace_period: 15s   # Apache stops gracefully on SIGWINCH (STOPSIGNAL of the image)
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "curl", "-fsS", "-o", "/dev/null", "http://127.0.0.1:8080/?health"]
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.geststock.rule: Host(`geststock.localhost`)
+      traefik.http.routers.geststock.entrypoints: web
+      traefik.http.routers.geststock.middlewares: geststock-retry
+      traefik.http.services.geststock.loadbalancer.server.port: "8080"
+      traefik.http.services.geststock.loadbalancer.healthcheck.path: /?health
+      traefik.http.services.geststock.loadbalancer.healthcheck.interval: 2s
+      traefik.http.middlewares.geststock-retry.retry.attempts: "5"
+      traefik.http.middlewares.geststock-retry.retry.initialInterval: 100ms
+    restart: unless-stopped
+    logging: *logging
+
+  # Daily report: same image, supercronic as the only process. Metrics/health on :9746.
+  cron:
+    build: .
+    image: geststock:${VERSION:-dev}
+    command: ["supercronic", "-prometheus-listen-address", "0.0.0.0:9746", "/etc/geststock/crontab"]
+    environment: *app-env
+    secrets: [db_password]
+    networks: [back]
+    depends_on:
+      db: { condition: service_healthy }
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "curl", "-fsS", "-o", "/dev/null", "http://127.0.0.1:9746/health"]
+    restart: unless-stopped
+    logging: *logging
+
+  db:
+    image: mariadb:11.4.13
+    user: "999:999"
+    environment:
+      MARIADB_DATABASE: geststock
+      MARIADB_USER: geststock
+      MARIADB_PASSWORD_FILE: /run/secrets/db_password
+      MARIADB_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
+    secrets: [db_password, db_root_password]
+    volumes:
+      - dbdata:/var/lib/mysql
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    networks: [back]
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+    restart: unless-stopped
+    logging: *logging
+
+networks:
+  front: {}
+  back:
+    internal: true
+  socket:
+    internal: true
+
+volumes:
+  dbdata: {}
+  uploads: {}
+
+secrets:
+  db_password:
+    file: ./secrets/db_password.txt
+  db_root_password:
+    file: ./secrets/db_root_password.txt

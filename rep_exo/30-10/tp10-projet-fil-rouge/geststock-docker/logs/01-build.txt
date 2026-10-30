@@ -1,0 +1,15 @@
+$ docker build --target test .
+#9 0.181 No syntax errors detected in /src/bin/rapport.php
+#9 0.193 No syntax errors detected in /src/lib/config.php
+#9 0.202 No syntax errors detected in /src/lib/db.php
+#9 0.214 No syntax errors detected in /src/public/index.php
+$ docker build -t geststock:dev .
+sha256:e26f6974aca57c11c9ccfeb3e9d05d12ca2421e96c63ecac970238eb4d707585
+User=www-data Size=530655899 Healthcheck=["CMD","curl","-fsS","-o","/dev/null","http://127.0.0.1:8080/?health"]
+PHP 8.3.35 (cli) (built: Oct 21 2026 00:33:53) (NTS)
+pdo_mysql
+display_errors => Off => Off
+sendmail_path => /usr/bin/msmtp -t --host=localhost --port=25 --from=geststock@shop.example => /usr/bin/msmtp -t --host=localhost --port=25 --from=geststock@shop.example
+upload_max_filesize => 20M => 20M
+v0.2.49
+Syntax OK
