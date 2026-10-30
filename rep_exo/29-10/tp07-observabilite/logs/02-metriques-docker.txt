@@ -1,0 +1,35 @@
+$ docker stats --no-stream (shop)
+NAME                         CPU %     MEM USAGE / LIMIT     MEM %     NET I/O           PIDS
+shop-api-1                   0.33%     21.48MiB / 256MiB     8.39%     1.16MB / 1.31MB   11
+shop-api-2                   0.40%     23.09MiB / 256MiB     9.02%     1.14MB / 1.29MB   11
+shop-traefik-1               0.03%     27.27MiB / 128MiB     21.31%    3.34MB / 3.28MB   10
+shop-worker-1                4.88%     18.2MiB / 128MiB      14.22%    396kB / 334kB     3
+shop-redis-1                 0.46%     4.277MiB / 128MiB     3.34%     596kB / 919kB     6
+shop-db-1                    0.30%     25.15MiB / 512MiB     4.91%     568kB / 3.09MB    9
+$ docker system df
+TYPE            TOTAL     ACTIVE    SIZE      RECLAIMABLE
+Images          296       36        94.68GB   80.39GB (84%)
+Containers      51        11        292.8MB   292.8MB (99%)
+Local Volumes   64        30        10.32GB   6.036GB (58%)
+Build Cache     451       0         21.73GB   4.021GB
+$ docker update --memory 64m --memory-swap 64m shop-api-1
+Memory=67108864
+$ ./load.sh 3000 50
+   2400 200
+    600 201
+shop-api-1 26.73MiB / 64MiB 41.76%
+OOMKilled=false RestartCount=0
+$ docker update --memory 24m --memory-swap 24m shop-api-1 && ./load.sh 3000 100
+   2283 200
+    563 201
+    154 502
+OOMKilled=false RestartCount=3 Status=running StartedAt=2026-10-30T09:26:35.733974578Z
+$ docker events --filter container=shop-api-1 --since 2m --until 0s
+1793352391 oom exitCode=
+1793352392 die exitCode=137
+1793352392 start exitCode=
+1793352393 oom exitCode=
+1793352393 die exitCode=137
+1793352394 start exitCode=
+1793352395 oom exitCode=
+1793352395 die exitCode=137

@@ -1,0 +1,30 @@
+# Scheduled backup sidecar for the TP04 stack (project "shop"):
+#   cd ../tp04-compose-entreprise
+#   docker compose -f compose.yml -f compose.prod.yml -f ../tp05-donnees-persistance/compose.backup.yml up -d --wait
+services:
+  backup:
+    image: prodrigestivill/postgres-backup-local:16
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_DB: shop
+      POSTGRES_USER: shop
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+      SCHEDULE: "@every 1m"   # test only, "@daily" in real life
+      BACKUP_KEEP_DAYS: 7
+      BACKUP_KEEP_WEEKS: 4
+      BACKUP_KEEP_MONTHS: 6
+    secrets: [db_password]
+    volumes:
+      - backups:/backups
+    networks: [back]
+    # The image checks every 5 min with no start interval: `up --wait` would block for 5 min.
+    healthcheck:
+      interval: 1m
+      start_period: 30s
+      start_interval: 2s
+    depends_on:
+      db: { condition: service_healthy }
+    restart: unless-stopped
+
+volumes:
+  backups: {}

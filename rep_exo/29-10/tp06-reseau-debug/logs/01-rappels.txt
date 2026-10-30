@@ -1,0 +1,16 @@
+$ docker exec tp06-a ping -c1 tp06-b   (bridge par défaut)
+ping: bad address 'tp06-b'
+exit=1
+$ (après network connect tp06-demo) docker exec tp06-a ping -c1 tp06-b
+PING tp06-b (192.168.16.3): 56 data bytes
+64 bytes from 192.168.16.3: seq=0 ttl=64 time=0.043 ms
+$ docker exec tp06-a cat /etc/resolv.conf
+
+nameserver 127.0.0.11
+search .
+options ndots:0
+
+$ docker run --rm --network container:tp06-a nicolaka/netshoot ip -br a
+lo               UNKNOWN        127.0.0.1/8 ::1/128 
+eth0@if94        UP             172.17.0.2/16 
+eth1@if97        UP             192.168.16.2/20 

@@ -1,0 +1,13 @@
+$ docker logs --since 5m --timestamps shop-api-1 | tail -2
+2026-10-30T09:21:41.761272116Z {"level":30,"time":1793352101761,"pid":1,"hostname":"7f0a85de39ca","req":{"id":189,"method":"GET","url":"/ready","query":{},"params":{},"headers":{"host":"172.31.0.3:3000","user-agent":"Go-http-client/1.1","accept-encoding":"gzip
+2026-10-30T09:21:47.738044818Z {"level":30,"time":1793352107737,"pid":1,"hostname":"7f0a85de39ca","req":{"id":190,"method":"GET","url":"/ready","query":{},"params":{},"headers":{"host":"127.0.0.1:3000","user-agent":"Wget","accept":"*/*","connection":"close"},"
+$ docker logs shop-api-1 | tail -1 | jq -c "{level,msg,req:.req.url,status:.res.statusCode}"
+{"level":30,"msg":"request completed","url":"/ready","status":200,"responseTime":0}
+$ docker inspect shop-api-1 --format "{{.HostConfig.LogConfig}}"
+{json-file map[max-file:3 max-size:10m]}
+$ docker inspect shop-api-1 --format "{{.LogPath}}"   (lecture du fichier = sudo, indisponible sur ce poste)
+/var/lib/docker/containers/7f0a85de39ca461faac7b21edeabe67cad0271b9c0114f3b6812f7a4600324fb/7f0a85de39ca461faac7b21edeabe67cad0271b9c0114f3b6812f7a4600324fb-json.log
+$ docker run --name tp07-nolog --log-driver none alpine:3.20 echo "pas loggé"; docker logs tp07-nolog
+pas loggé
+Error response from daemon: configured logging driver does not support reading
+exit=1

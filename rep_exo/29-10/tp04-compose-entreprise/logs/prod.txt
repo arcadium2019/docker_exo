@@ -1,0 +1,23 @@
+ Container shop-api-1 Healthy 
+ Container shop-api-2 Healthy 
+ Container shop-worker-1 Healthy 
+NAME             IMAGE                            STATUS                   PORTS
+shop-api-1       localhost:5000/shopapi:1.0       Up 2 seconds (healthy)   3000/tcp
+shop-api-2       localhost:5000/shopapi:1.0       Up 2 seconds (healthy)   3000/tcp
+shop-db-1        postgres:16.4-alpine             Up 4 seconds (healthy)   5432/tcp
+shop-redis-1     redis:7.4-alpine                 Up 4 seconds (healthy)   6379/tcp
+shop-traefik-1   traefik:v3.6                     Up 4 seconds (healthy)   0.0.0.0:80->80/tcp, [::]:80->80/tcp
+shop-worker-1    localhost:5000/shop-worker:1.0   Up 2 seconds (healthy)   9100/tcp
+--- access log traefik (backend URL)
+      3 "api@docker" "http://172.31.0.3:3000"
+      3 "api@docker" "http://172.31.0.4:3000"
+--- durcissement
+ReadOnly=true CapDrop=[ALL] SecOpt=[no-new-privileges:true] Mem=268435456 NanoCpus=500000000 Tmpfs=map[/tmp:]
+prod: 5432 fermé
+prod: 8080 (dashboard) fermé
+--- smoke test prod
+1. /ready
+2. /products cache
+3. POST /orders
+4. order confirmed by the worker
+OK: smoke test passed

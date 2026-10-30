@@ -1,0 +1,43 @@
+$ ./upgrade-pg.sh
+== 1. checksum before
+ Container shopdata-db-1 Starting 
+ Container shopdata-db-1 Started 
+ Container shopdata-db-1 Waiting 
+ Container shopdata-db-1 Healthy 
+postgres (PostgreSQL) 14.13
+100000 19aea9c9d99552d2ad3ba1721b66a48e
+== 2. dumps
+-rw-r--r--. 1 teo teo 5097934 30 oct.  10:10 ./backups/upgrade-20261030-101014-all.sql
+-rw-r--r--. 1 teo teo 1593625 30 oct.  10:10 ./backups/upgrade-20261030-101014-shop.dump
+== 3. stop PG14 (volume kept)
+ Container shopdata-db-1 Stopping 
+ Container shopdata-db-1 Stopped 
+== 4. PG16 on a new volume
+ Volume shopdata_pgdata16 Creating 
+ Volume shopdata_pgdata16 Creating 
+ Volume shopdata_pgdata16 Created 
+ Volume shopdata_pgdata16 Created 
+ Container shopdata-db-1 Recreate 
+ Container shopdata-db-1 Recreated 
+ Container shopdata-db-1 Starting 
+ Container shopdata-db-1 Started 
+ Container shopdata-db-1 Waiting 
+ Container shopdata-db-1 Healthy 
+postgres (PostgreSQL) 16.4
+== 5. restore
+== 6. checksum after
+100000 19aea9c9d99552d2ad3ba1721b66a48e
+VERDICT: OK, no data loss
+
+real	0m12,980s
+user	0m0,475s
+sys	0m0,278s
+
+--- retour arrière (vérification)
+$ docker compose -f compose.yml up -d --wait db && ./checksum.sh
+ Container shopdata-db-1 Healthy 
+postgres (PostgreSQL) 14.13
+100000 19aea9c9d99552d2ad3ba1721b66a48e
+DRIVER    VOLUME NAME
+local     shopdata_pgdata
+local     shopdata_pgdata16

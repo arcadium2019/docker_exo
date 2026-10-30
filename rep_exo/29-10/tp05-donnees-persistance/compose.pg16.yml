@@ -1,0 +1,10 @@
+# Target of the major upgrade: PostgreSQL 16 on a NEW volume, the PG14 volume stays untouched.
+#   docker compose -f compose.yml -f compose.pg16.yml up -d --wait db
+services:
+  db:
+    image: postgres:16.4-alpine
+    volumes: !override
+      - pgdata16:/var/lib/postgresql/data
+
+volumes:
+  pgdata16:

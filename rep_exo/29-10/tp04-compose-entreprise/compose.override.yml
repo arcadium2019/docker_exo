@@ -1,0 +1,33 @@
+# Dev only - applied automatically by `docker compose up`.
+services:
+  traefik:
+    environment:
+      TRAEFIK_API_INSECURE: "true"   # dashboard on :8080
+    ports:
+      - "8080:8080"
+
+  api:
+    # Live reload: source bind-mounted, restarted by node --watch on change.
+    command:
+      - sh
+      - -c
+      - export DATABASE_URL="postgres://shop:$$(cat /run/secrets/db_password)@db:5432/shop" && exec node --watch src/server.js
+    environment:
+      LOG_LEVEL: debug
+    volumes:
+      - ./apps/shopapi/src:/app/src:ro
+    ports:
+      - "3000:3000"
+
+  worker:
+    environment:
+      LOG_LEVEL: DEBUG
+
+  db:
+    ports:
+      - "5432:5432"
+
+# An internal network cannot publish ports: in dev only, back is opened to reach db on 5432.
+networks:
+  back:
+    internal: false

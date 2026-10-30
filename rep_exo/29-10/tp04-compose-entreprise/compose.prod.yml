@@ -1,0 +1,42 @@
+# Prod: docker compose -f compose.yml -f compose.prod.yml up -d --wait
+# Images come from the registry (TP03); nothing is built on the server.
+x-hardening: &hardening
+  read_only: true
+  tmpfs: [/tmp]
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+
+services:
+  api:
+    <<: *hardening
+    build: !reset null
+    image: ${REGISTRY:?REGISTRY must be set}/shopapi:${VERSION:?VERSION must be set}
+    pull_policy: missing
+    deploy:
+      replicas: 2
+      resources:
+        limits: { cpus: "0.50", memory: 256M }
+
+  worker:
+    <<: *hardening
+    build: !reset null
+    image: ${REGISTRY:?REGISTRY must be set}/shop-worker:${VERSION:?VERSION must be set}
+    pull_policy: missing
+    deploy:
+      resources:
+        limits: { cpus: "0.25", memory: 128M }
+
+  db:
+    deploy:
+      resources:
+        limits: { cpus: "1.00", memory: 512M }
+
+  redis:
+    deploy:
+      resources:
+        limits: { cpus: "0.25", memory: 128M }
+
+  traefik:
+    deploy:
+      resources:
+        limits: { cpus: "0.25", memory: 128M }

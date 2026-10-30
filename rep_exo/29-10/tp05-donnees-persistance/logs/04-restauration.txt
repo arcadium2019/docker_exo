@@ -1,0 +1,33 @@
+$ docker compose up -d --wait
+ Container shopdata-db-1 Healthy 
+$ ./seed.sh
+CREATE TABLE
+CREATE TABLE
+INSERT 0 500
+INSERT 0 100000
+ orders |             checksum             
+--------+----------------------------------
+ 100000 | 19aea9c9d99552d2ad3ba1721b66a48e
+(1 row)
+
+$ RAW=1 ./backup.sh
+logical dump: ./backups/shop-20261030-100945.dump (1,6M)
+ Container shopdata-db-1 Stopping 
+ Container shopdata-db-1 Stopped 
+ Container shopdata-db-1 Starting 
+ Container shopdata-db-1 Started 
+raw backup:   ./backups/shopdata_pgdata-20261030-100945.tar.gz (13M)
+$ docker compose down -v
+ Volume shopdata_pgdata Removing 
+ Volume shopdata_pgdata Removed 
+$ docker compose up -d --wait   (base vide)
+ Container shopdata-db-1 Healthy 
+tables publiques: 0
+$ ./restore.sh
+restoring ./backups/shop-20261030-100945.dump
+ Container shopdata-db-1 Running 
+ Container shopdata-db-1 Waiting 
+ Container shopdata-db-1 Healthy 
+restore done
+$ ./checksum.sh
+100000 19aea9c9d99552d2ad3ba1721b66a48e

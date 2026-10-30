@@ -1,0 +1,6 @@
+NAME             IMAGE                  COMMAND                  SERVICE   CREATED         STATUS                   PORTS
+shop-api-1       shop-api               "docker-entrypoint.s…"   api       6 seconds ago   Up 1 second (healthy)    0.0.0.0:3000->3000/tcp, [::]:3000->3000/tcp
+shop-db-1        postgres:16.4-alpine   "docker-entrypoint.s…"   db        6 seconds ago   Up 5 seconds (healthy)   0.0.0.0:5432->5432/tcp, [::]:5432->5432/tcp
+shop-redis-1     redis:7.4-alpine       "docker-entrypoint.s…"   redis     6 seconds ago   Up 5 seconds (healthy)   6379/tcp
+shop-traefik-1   traefik:v3.6           "/entrypoint.sh --pr…"   traefik   6 seconds ago   Up 5 seconds (healthy)   0.0.0.0:80->80/tcp, [::]:80->80/tcp, 0.0.0.0:8080->8080/tcp, [::]:8080->8080/tcp
+shop-worker-1    shop-worker            "sh -c 'export DATAB…"   worker    6 seconds ago   Up 1 second (healthy)    9100/tcp

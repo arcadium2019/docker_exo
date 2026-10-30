@@ -1,0 +1,55 @@
+$ REGISTRY= docker compose -f compose.yml -f compose.prod.yml config
+error while interpolating services.api.image: required variable REGISTRY is missing a value: REGISTRY must be set
+error while interpolating services.worker.image: required variable REGISTRY is missing a value: REGISTRY must be set
+
+$ docker compose -f compose.yml -f compose.prod.yml config (extrait api)
+  api:
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: 0.5
+          memory: "268435456"
+    restart: unless-stopped
+    cap_drop:
+    command:
+        && exec node src/server.js
+    environment:
+      LOG_LEVEL: info
+      REDIS_URL: redis://redis:6379
+    image: localhost:5000/shopapi:1.0
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.api.entrypoints: web
+      traefik.http.routers.api.rule: Host(`api.localhost`)
+      traefik.http.services.api.loadbalancer.healthcheck.interval: 10s
+      traefik.http.services.api.loadbalancer.healthcheck.path: /ready
+      traefik.http.services.api.loadbalancer.server.port: "3000"
+    logging:
+      driver: json-file
+      options:
+        max-file: "3"
+        max-size: 10m
+    networks:
+      back: null
+      front: null
+    pull_policy: missing
+    read_only: true
+    secrets:
+        target: /run/secrets/db_password
+    security_opt:
+    tmpfs:
+    depends_on:
+      db:
+        condition: service_healthy
+        required: true
+      redis:
+        condition: service_healthy
+        required: true
+    healthcheck:
+      timeout: 3s
+      interval: 10s
+      retries: 5
+      start_period: 20s
+      start_interval: 1s
+  db:

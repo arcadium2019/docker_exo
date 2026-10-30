@@ -1,0 +1,75 @@
+10:18 $ docker compose config -q
+services.deploy.replicas: can't set container_name and api as container name must be unique: invalid compose project
+exit=1
+$ docker compose up -d
+services.deploy.replicas: can't set container_name and api as container name must be unique: invalid compose project
+10:18 [fix 1: container_name supprimé] $ docker compose up -d
+10:18 [fix 2: chemins build/init.sql vers ../tp04-compose-entreprise] $ docker compose up -d
+ Container incident-db-1 Waiting 
+ Container incident-db-1 Healthy 
+ Container incident-api-2 Starting 
+ Container incident-api-2 Started 
+ Container incident-api-1 Starting 
+ Container incident-api-1 Started 
+ Container incident-front-1 Starting 
+Error response from daemon: failed to create task for container: failed to create shim task: OCI runtime create failed: runc create failed: unable to start container process: error during container init: error mounting "/home/teo/Documents/Ynov/M2/Docker/docker_exo/rep_exo/29-10/tp06-reseau-debug/nginx" to rootfs at "/etc/nginx/conf.d/default.conf": mount src=/home/teo/Documents/Ynov/M2/Docker/docker_exo/rep_exo/29-10/tp06-reseau-debug/nginx, dst=/etc/nginx/conf.d/default.conf, dstFd=/proc/thread-self/fd/14, flags=MS_BIND|MS_REC: not a directory: Are you trying to mount a directory onto a file (or vice-versa)? Check if the specified host path exists and is the expected type
+10:18 [fix 3: monter le fichier default.conf, pas le dossier] $ docker compose up -d
+ Container incident-front-1 Starting 
+ Container incident-front-1 Started 
+$ docker compose ps
+NAME               STATUS                    PORTS
+incident-db-1      Up 13 seconds (healthy)   5432/tcp
+incident-front-1   Up Less than a second     80/tcp
+incident-redis-1   Up 13 seconds             
+$ curl -sv localhost:8081/health
+000
+exit=7
+$ docker inspect incident-front-1 --format "{{json .NetworkSettings.Ports}}"
+{"80/tcp":null}
+$ docker network inspect incident_public --format "{{.Internal}}"
+internal=true
+$ docker compose ps -a api
+incident-api-1 Exited (1) 5 seconds ago
+incident-api-2 Exited (1) 5 seconds ago
+$ docker compose logs api --tail 5
+api-2  |   requireStack: []
+api-2  | }
+api-2  | 
+api-2  | Node.js v20.20.2
+api-1  |   requireStack: []
+api-1  | }
+api-1  | 
+api-1  | Node.js v20.20.2
+$ docker compose logs redis --tail 3
+redis-1  | 1:M 30 Oct 2026 09:18:18.592 * Running mode=standalone, port=6379.
+redis-1  | 1:M 30 Oct 2026 09:18:18.592 * Server initialized
+redis-1  | 1:M 30 Oct 2026 09:18:18.593 * Ready to accept connections tcp
+$ docker inspect incident-redis-1 --format "{{.HostConfig.NetworkMode}}"
+host
+$ docker compose logs db | grep FATAL
+db-1  | 2026-10-30 09:18:28.757 UTC [76] FATAL:  role "postgres" does not exist
+db-1  | 2026-10-30 09:18:33.789 UTC [83] FATAL:  role "postgres" does not exist
+api-2  | Error: Cannot find module '/app/server.js'
+$ timeout 1 bash -c "</dev/tcp/127.0.0.1/6379" (redis en network_mode host)
+6379 OUVERT sur l'hôte (toutes interfaces)
+LISTEN 0      511               0.0.0.0:6379       0.0.0.0:*   
+LISTEN 0      511                  [::]:6379          [::]:*   
+10:18 [fix 4: command node src/server.js] $ docker compose up -d api
+ Container incident-api-1 Started 
+incident-api-1 Up 20 seconds (health: starting)
+incident-api-2 Up 20 seconds (health: starting)
+$ docker inspect incident-api-1 --format "{{json .State.Health.Log}}" | jq -r ".[-1].Output"
+wget: can't connect to remote host (127.0.0.1): Connection refused
+
+$ docker exec incident-api-1 netstat -tln
+tcp        0      0 127.0.0.11:43543        0.0.0.0:*               LISTEN      
+tcp        0      0 :::8080                 :::*                    LISTEN      
+$ docker exec incident-api-1 wget -qO- 127.0.0.1:8080/ready
+wget: server returned error: HTTP/1.1 503 Service Unavailable
+
+$ docker exec incident-api-1 getent hosts databse db redis
+databse: non résolu
+db: non résolu
+redis: non résolu
+$ docker inspect incident-api-1 --format "{{json .NetworkSettings.Networks}}" | jq -c keys
+["incident_public"]

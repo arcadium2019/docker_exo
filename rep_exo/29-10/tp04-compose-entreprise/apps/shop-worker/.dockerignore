@@ -1,0 +1,7 @@
+# Allowlist: credentials (pip.conf*), caches and VCS never reach the build context.
+*
+!requirements.txt
+!requirements-dev.txt
+!worker/
+!tests/
+**/__pycache__

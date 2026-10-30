@@ -1,0 +1,10 @@
+$ docker run -d --name anon-pg -e POSTGRES_HOST_AUTH_METHOD=trust postgres:16-alpine
+{"Type":"volume","Name":"173ba45cbfbb01d185017237501bc36375a70c12cb3450dd784e88a837960b35","Destination":"/var/lib/postgresql/data"}
+(VOLUME /var/lib/postgresql/data déclaré dans l'image)
+{"/var/lib/postgresql/data":{}}
+$ docker rm -f anon-pg
+volume 173ba45cbfbb01d185017237501bc36375a70c12cb3450dd784e88a837960b35 TOUJOURS là (orphelin)
+$ docker volume rm 173ba45cbfbb01d185017237501bc36375a70c12cb3450dd784e88a837960b35
+173ba45cbfbb01d185017237501bc36375a70c12cb3450dd784e88a837960b35
+$ docker run -d --name anon-pg2 ... ; docker rm -fv anon-pg2
+volume d0b9d13bb71281eb4ec5c83cc4ad29c7210074ef78ccefda464822e43d8075e9 supprimé avec le conteneur

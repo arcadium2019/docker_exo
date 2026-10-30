@@ -1,0 +1,8 @@
+$ docker compose stop db
+ Container shopdata-db-1 Stopped 
+$ docker run --rm -v shopdata_pgdata:/var/lib/postgresql/data postgres:16.4-alpine   (= "juste changer le tag")
+PostgreSQL Database directory appears to contain a database; Skipping initialization
+
+2026-10-30 09:10:09.677 UTC [1] FATAL:  database files are incompatible with server
+2026-10-30 09:10:09.677 UTC [1] DETAIL:  The data directory was initialized by PostgreSQL version 14, which is not compatible with this version 16.4.
+exit=0

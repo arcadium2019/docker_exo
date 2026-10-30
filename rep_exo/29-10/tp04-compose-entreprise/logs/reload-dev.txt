@@ -1,0 +1,6 @@
+$ curl api.localhost/
+{"service":"shopapi","version":"0.0.0-dev"}
+$ (server.js modifié) curl localhost:3000/
+{"service":"shopapi","reloaded":true,"version":"0.0.0-dev"}
+api-1  | Restarting 'src/server.js'
+api-1  | {"level":30,"time":1793351150223,"pid":56,"hostname":"4b2abd697ca4","port":"3000","msg":"shopapi démarré"}

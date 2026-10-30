@@ -1,0 +1,74 @@
+# INCIDENT P1 - corrected compose (see INCIDENT.md for each fix, numbered #N below).
+name: incident
+services:
+  front:
+    image: nginx:1.27-alpine
+    ports:
+      - "8081:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro   # #3 file, not directory
+    networks:
+      - public
+    depends_on:
+      api:
+        condition: service_healthy                                # #13
+    healthcheck:                                                  # #13
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  api:
+    build: ../tp04-compose-entreprise/apps/shopapi               # #2 path
+    # #1 no container_name with replicas
+    command: ["node", "src/server.js"]                           # #4
+    environment:
+      PORT: 3000                                                 # #5 matches nginx + image healthcheck
+      DATABASE_URL: postgres://shop:shop@db:5432/shop            # #6 typo databse
+      REDIS_URL: redis://:r3dis@redis:6379                       # #10 password
+    networks:
+      - public
+      - backend                                                  # #7
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy                               # #13
+    deploy:
+      replicas: 2
+
+  db:
+    image: postgres:16.4-alpine
+    environment:
+      POSTGRES_USER: shop
+      POSTGRES_PASSWORD: shop
+      POSTGRES_DB: shop
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ../tp04-compose-entreprise/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro   # #2 path
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U shop -d shop"]          # #11
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  redis:
+    image: redis:7.4-alpine
+    command: ["redis-server", "--requirepass", "r3dis"]
+    networks:                                                    # #9 no network_mode: host
+      - backend
+    healthcheck:                                                 # #13
+      test: ["CMD", "redis-cli", "-a", "r3dis", "--no-auth-warning", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+networks:
+  public: {}                                                     # #8 not internal: port publishing needs it
+  backend:
+    internal: true                                               # #8 the private one is backend
+
+volumes:
+  pgdata:

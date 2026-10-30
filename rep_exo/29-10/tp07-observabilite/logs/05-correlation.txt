@@ -1,0 +1,25 @@
+10:30:28 panne injectée : docker stop shop-redis-1
+     16 200
+      4 201
+    280 503
+--- Loki (Grafana Explore) : {project="shop"} | json | level="50" (erreurs pino)
+--- Loki : {service="worker"} |= "erreur"
+{"ts":"2026-10-30 09:30:52,503","level":"ERROR","msg":"erreur: Error -3 connecting to redis:6379. Temporary failure in name resolution."}
+{"ts":"2026-10-30 09:30:50,491","level":"ERROR","msg":"erreur: Error -3 connecting to redis:6379. Temporary failure in name resolution."}
+--- Prometheus : /ready 503 par instance
+172.31.0.5:3000 0.03294833333333333
+--- Prometheus (cAdvisor) : redis encore vu ?
+shop-redis-1 last seen 30.032999992370605s ago
+--- vérification docker
+shop-redis-1 Exited (0) 24 seconds ago
+10:30:53 remise en état : docker start shop-redis-1
+--- Loki : {service="api", level="50"}   (le label level est déjà extrait par promtail)
+level=null lignes(5m)=32
+level=30 lignes(5m)=64894
+--- Loki : pino-http logge tout en level 30 (pas de customLogLevel) → filtrer sur le statut
+    {service="api"} | json | res_statusCode >= 500
+{"level":30,"url":"/ready","status":503,"host":"7f0a85de39ca"}
+{"level":30,"url":"/ready","status":503,"host":"0f9581b3a5ee"}
+    sum by (container) (count_over_time({service="api"} | json | res_statusCode >= 500 [5m]))
+shop-api-1 2
+shop-api-2 1

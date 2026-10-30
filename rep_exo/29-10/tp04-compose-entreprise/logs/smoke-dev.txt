@@ -1,0 +1,27 @@
+$ make test
+./smoke-test.sh
+1. /ready
+2. /products cache
+3. POST /orders
+4. order confirmed by the worker
+OK: smoke test passed
+
+$ make migrate M=002-add-sku.sql
+MIGRATION=002-add-sku.sql docker compose run --rm migrate
+ALTER TABLE
+UPDATE 3
+ id |       name        |    sku    
+----+-------------------+-----------
+  1 | Clavier mécanique | SKU-00001
+  2 | Écran 27"         | SKU-00002
+  3 | Souris sans fil   | SKU-00003
+(3 rows)
+
+$ make tools
+ Container shop-worker-1 Healthy 
+ Container shop-adminer-1 Healthy 
+adminer.localhost -> 404
+db:5432 depuis hôte (dev) -> rc=28
+adminer.localhost -> 200
+dev: 127.0.0.1:5432 ouvert
+dev: 127.0.0.1:6379 fermé (redis non publié)

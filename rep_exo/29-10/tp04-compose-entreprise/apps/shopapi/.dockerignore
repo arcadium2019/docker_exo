@@ -1,0 +1,6 @@
+# Allowlist: only what the build actually needs enters the context.
+*
+!package.json
+!package-lock.json
+!src/
+!test/

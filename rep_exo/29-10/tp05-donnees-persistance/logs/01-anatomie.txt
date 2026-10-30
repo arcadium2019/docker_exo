@@ -1,0 +1,23 @@
+$ docker inspect shop-db-1 --format "{{json .Mounts}}" | jq -c ".[]"
+{"Type":"bind","Name":null,"Source":"/home/teo/Documents/Ynov/M2/Docker/docker_exo/rep_exo/29-10/tp04-compose-entreprise/db/init.sql","Destination":"/docker-entrypoint-initdb.d/init.sql","RW":false}
+{"Type":"bind","Name":null,"Source":"/home/teo/Documents/Ynov/M2/Docker/docker_exo/rep_exo/29-10/tp04-compose-entreprise/secrets/db_password.txt","Destination":"/run/secrets/db_password","RW":false}
+{"Type":"volume","Name":"shop_pgdata","Source":"/var/lib/docker/volumes/shop_pgdata/_data","Destination":"/var/lib/postgresql/data","RW":true}
+$ docker volume inspect shop_pgdata
+{"Name":"shop_pgdata","Driver":"local","Mountpoint":"/var/lib/docker/volumes/shop_pgdata/_data","Labels":{"com.docker.compose.config-hash":"2e6965aae4be884527a3afdfd8a79c1df6e053b87c8af8d38f5a222324c8c722","com.docker.compose.project":"shop","com.docker.compose.version":"5.6.1","com.docker.compose.volume":"pgdata"}}
+$ docker inspect shop-db-1 --format "{{.GraphDriver.Name}} {{json .GraphDriver.Data}}"
+overlay2 {"ID":"2df30ca7c63e2d23432449054a91af9b5d3a0786267546837cf7d7d8ca2c3d4e","LowerDir":"/var/lib/docker/overlay2/b1769eedf419258820709d972eb8b0dd00c46667e74e36f7a16ad8774c2c8010-init/diff:/var/lib/docker/overlay2/6c7ec62f55713ff028185d0e8ab9bb0f9e7b177ad64c95adb3659948c9eca6a0/diff:/var/lib/do
+$ docker exec shop-db-1 touch /tmp/x && docker diff shop-db-1
+C /tmp
+A /tmp/x
+C /docker-entrypoint-initdb.d
+A /docker-entrypoint-initdb.d/init.sql
+C /run
+C /run/postgresql
+A /run/postgresql/.s.PGSQL.5432
+A /run/postgresql/.s.PGSQL.5432.lock
+A /run/secrets
+A /run/secrets/db_password
+$ docker system df -v | grep -E "VOLUME NAME|shop_"
+VOLUME NAME                                                        LINKS     SIZE
+shop_pgdata                                                        1         48.07MB
+shop_redisdata                                                     1         1.222kB

@@ -1,0 +1,12 @@
+$ docker compose logs promtail | grep -iE "error|level=warn" | tail -3
+promtail-1  | level=warn ts=2026-10-30T09:25:02.724439729Z caller=promtail.go:263 msg="enable watchConfig"
+$ curl -s localhost:9090/api/v1/targets | jq
+api	172.31.0.4:3000	up	
+api	172.31.0.3:3000	up	
+cadvisor	cadvisor:8080	up	
+prometheus	localhost:9090	up	
+worker	172.30.0.4:9100	up	
+$ cadvisor: noms de conteneurs ?
+null
+shop-api-1 16400384
+shop-api-2 17711104

@@ -1,0 +1,21 @@
+10:20 $ docker compose down && docker compose up -d --wait
+ Network incident_backend Removed 
+ Container incident-api-2 Healthy 
+ Container incident-front-1 Healthy 
+$ docker compose ps
+NAME               STATUS                    PORTS
+incident-api-1     Up 7 seconds (healthy)    3000/tcp
+incident-api-2     Up 7 seconds (healthy)    3000/tcp
+incident-db-1      Up 13 seconds (healthy)   5432/tcp
+incident-front-1   Up 5 seconds (healthy)    0.0.0.0:8081->80/tcp, [::]:8081->80/tcp
+incident-redis-1   Up 13 seconds (healthy)   6379/tcp
+$ curl -si localhost:8081/products (x2)
+HTTP/1.1 200 OK
+X-Cache: MISS
+HTTP/1.1 200 OK
+X-Cache: HIT
+[{"id":1,"name":"Clavier mécanique","price":"89.90","stock":12},{"id":2,"name":"Écran 27\"","price":"249.00","stock":4},{"id":3,"name":"Souris sans fil","price":"29.50","stock":40}]
+$ redis exposé sur l hôte ?
+6379 fermé
+$ docker compose logs db --since 20s | grep -c "role \"postgres\""
+0

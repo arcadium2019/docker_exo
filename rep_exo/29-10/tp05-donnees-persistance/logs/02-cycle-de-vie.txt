@@ -1,0 +1,20 @@
+produits: 4
+$ docker compose down
+volume shopcopy_pgdata présent
+après redémarrage, produits: 4
+$ docker compose rm -sf db
+volume shopcopy_pgdata présent
+produits: 4
+$ docker volume prune -f --filter label=com.docker.compose.project=shopcopy   (sans -a : seulement les volumes anonymes)
+Total reclaimed space: 0B
+volume shopcopy_pgdata présent
+$ docker volume prune -af --filter label=com.docker.compose.project=shopcopy
+Deleted Volumes:
+shopcopy_pgdata
+
+volume shopcopy_pgdata ABSENT
+produits: 3  (base neuve, init.sql rejoué)
+$ docker compose down -v
+ Volume shopcopy_pgdata Removing 
+ Volume shopcopy_pgdata Removed 
+volume shopcopy_pgdata ABSENT

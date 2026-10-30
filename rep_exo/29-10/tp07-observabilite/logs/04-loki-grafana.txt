@@ -1,0 +1,19 @@
+$ ./load.sh 1000
+    800 200
+    200 201
+--- Loki: valeurs du label service
+["api","cadvisor","db","grafana","loki","prometheus","promtail","redis","traefik","worker"]
+--- Loki: valeurs du label level
+["30","INFO"]
+--- {service="worker"} |= "confirmed" (3 lignes)
+{"ts":"2026-10-30 09:25:52,573","level":"INFO","msg":"commande 1793352352564 -> confirmed"}
+{"ts":"2026-10-30 09:25:52,570","level":"INFO","msg":"commande 1793352352564 -> confirmed"}
+{"ts":"2026-10-30 09:25:52,566","level":"INFO","msg":"commande 1793352352556 -> confirmed"}
+--- Grafana: datasources / dashboards provisionnés
+Loki loki http://loki:3100 readOnly=true
+Prometheus prometheus http://prometheus:9090 readOnly=true
+dash-folder Shop uid=fg2ryih0wpgjkc folder=null
+dash-db Shop SAS - overview uid=shop-overview folder=Shop
+--- Prometheus: sum(rate(http_request_duration_seconds_count[1m])) by (status)
+status=200 30.170407333333333 req/s
+status=201 7.233626666666668 req/s
